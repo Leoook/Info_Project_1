@@ -20,13 +20,13 @@ public class Feedback {
     public String getComment() { return comment; }
 }
 
-(Verifica partecipazione prima di accettare un feedback)
+//(Verifica partecipazione prima di accettare un feedback)
 public boolean canGiveFeedback(Student student, Activity activity) {
-    return activity.getParticipants().contains(student);
+    return Activity.getParticipants().contains(student);
 }
 
 
-(REGISTAZIONE DEI FEEDBACK)
+//(REGISTAZIONE DEI FEEDBACK)
 public class FeedbackService {
     public void addFeedback(Student student, Activity activity, int rating, String comment) {
         if (!activity.getParticipants().contains(student)) {
@@ -43,7 +43,7 @@ public class FeedbackService {
 }
 
 
-(esempi di funzioncine per ricavare vari valori dai feedback)
+//(esempi di funzioncine per ricavare vari valori dai feedback)
 public double getAverageRating(Activity activity) {
     List<Feedback> feedbacks = activity.getFeedbacks();
     if (feedbacks.isEmpty()) return 0.0;
@@ -61,7 +61,7 @@ public List<Feedback> getNegativeFeedbacks(Activity activity) {
 
 
 
-(evidenziare feedback con parole chiave da segnalare)
+//(evidenziare feedback con parole chiave da segnalare)
 List<String> flaggedWords = Arrays.asList("noioso", "pericoloso", "non sicuro");
 
 public List<Feedback> getFlaggedFeedbacks(Activity activity) {

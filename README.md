@@ -1,5 +1,8 @@
 Tools:
 -Java(with the libraries needed:JDBC,Interface)
+-libraries: -all the utils
+            -Swing for the interface
+            -JDBC for the database connection
 -Mysql server (Probably phpmyadmin)
 
 
@@ -17,7 +20,7 @@ Contains name, description, duration, location, time, maximum number of particip
 Manages registration and checks availability of places.
 
 3. 
-Group Class/List
+Group Class
 Represents a group of students.
 Keeps track of members and training criteria (e.g. common activity, dietary needs).
 
@@ -40,16 +43,16 @@ ExpenseManager Class
 Manages all registered expenses.
 
 Calculates how much each student must receive or reimburse.
-***combined with student***
+
 
 8. 
 Feedback Class
 Allows a student to leave a rating on an activity (from 1 to 5 stars) and a comment. 
 9. 
 Statistics Class
-Calculates statistics on feedback (average grades, most appreciated activity, etc.).
-Highlights any problems (negative feedback, critical comments).
-Allows a student to leave a rating on an activity (from 1 to 5 stars) and a comment.
+Analyzes feedback data to calculate statistics such as average ratings, most appreciated activities, and trends in feedback.
+Identifies potential issues by highlighting negative feedback or critical comments.
+Works in conjunction with the Feedback Class to process and summarize feedback data.
 
 10. 
 UserInterface Class
@@ -72,4 +75,9 @@ Trip manages all coordination between Student, Activity, Group, Expense, DailyPr
 Feedback is linked to Activities.
 
 ExpenseManager and Statistics work on the Expense and Feedback collections.
+
+Ideas:
+-login page (with passwords and usernames)
+-Onine website (maybe hosted on a vps?)
+
 

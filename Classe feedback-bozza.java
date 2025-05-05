@@ -1,3 +1,8 @@
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 public class Feedback {
     private int id;
     private Student student;
@@ -20,14 +25,8 @@ public class Feedback {
     public String getComment() { return comment; }
 }
 
-//(Verifica partecipazione prima di accettare un feedback)
-public boolean canGiveFeedback(Student student, Activity activity) {
-    return Activity.getParticipants().contains(student);
-}
-
-
-//(REGISTAZIONE DEI FEEDBACK)
 public class FeedbackService {
+    // REGISTRAZIONE DEI FEEDBACK
     public void addFeedback(Student student, Activity activity, int rating, String comment) {
         if (!activity.getParticipants().contains(student)) {
             System.out.println("Errore: lo studente non ha partecipato all'attività.");
@@ -40,32 +39,34 @@ public class FeedbackService {
         
         // Salva anche su database
     }
-}
 
+    // Verifica partecipazione prima di accettare un feedback
+    public boolean canGiveFeedback(Student student, Activity activity) {
+        return activity.getParticipants().contains(student);
+    }
 
-//(esempi di funzioncine per ricavare vari valori dai feedback)
-public double getAverageRating(Activity activity) {
-    List<Feedback> feedbacks = activity.getFeedbacks();
-    if (feedbacks.isEmpty()) return 0.0;
+    // Esempi di funzioncine per ricavare vari valori dai feedback
+    public double getAverageRating(Activity activity) {
+        List<Feedback> feedbacks = activity.getFeedbacks();
+        if (feedbacks.isEmpty()) return 0.0;
 
-    double sum = 0;
-    for (Feedback f : feedbacks) sum += f.getRating();
-    return sum / feedbacks.size();
-}
+        double sum = 0;
+        for (Feedback f : feedbacks) sum += f.getRating();
+        return sum / feedbacks.size();
+    }
 
-public List<Feedback> getNegativeFeedbacks(Activity activity) {
-    return activity.getFeedbacks().stream()
-        .filter(f -> f.getRating() <= 2)
-        .collect(Collectors.toList());
-}
+    public List<Feedback> getNegativeFeedbacks(Activity activity) {
+        return activity.getFeedbacks().stream()
+            .filter(f -> f.getRating() <= 2)
+            .collect(Collectors.toList());
+    }
 
+    // Evidenziare feedback con parole chiave da segnalare
+    private List<String> flaggedWords = Arrays.asList("noioso", "pericoloso", "non sicuro");
 
-
-//(evidenziare feedback con parole chiave da segnalare)
-List<String> flaggedWords = Arrays.asList("noioso", "pericoloso", "non sicuro");
-
-public List<Feedback> getFlaggedFeedbacks(Activity activity) {
-    return activity.getFeedbacks().stream()
-        .filter(f -> flaggedWords.stream().anyMatch(word -> f.getComment().toLowerCase().contains(word)))
-        .collect(Collectors.toList());
+    public List<Feedback> getFlaggedFeedbacks(Activity activity) {
+        return activity.getFeedbacks().stream()
+            .filter(f -> flaggedWords.stream().anyMatch(word -> f.getComment().toLowerCase().contains(word)))
+            .collect(Collectors.toList());
+    }
 }

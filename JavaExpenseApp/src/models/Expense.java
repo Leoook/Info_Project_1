@@ -1,3 +1,7 @@
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
 public class Expense {
     private double amount;
     private String description;
@@ -31,5 +35,19 @@ public class Expense {
 
     public void setDate(String date) {
         this.date = date;
+    }
+
+    public void saveToDatabase() {
+        try (Connection connection = DbConnection.connect()) {
+            String sql = "INSERT INTO expenses (amount, description, date) VALUES (?, ?, ?)";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setDouble(1, amount);
+            statement.setString(2, description);
+            statement.setString(3, date);
+            statement.executeUpdate();
+            System.out.println("Expense saved to database.");
+        } catch (SQLException e) {
+            System.err.println("Error saving expense to database: " + e.getMessage());
+        }
     }
 }

@@ -1,4 +1,7 @@
 import java.util.List;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class Activity {
 	int id,maxpart,start,finish,duration;
@@ -88,6 +91,23 @@ public class Activity {
 
 	public void setActivityFeedback(List Activityfeedback) {
 		this.Activityfeedback = Activityfeedback;
+	}
+
+	public void saveToDatabase() {
+	    try (Connection connection = DbConnection.connect()) {
+	        String sql = "INSERT INTO activities (name, max_participants, location, duration, start_time, finish_time) VALUES (?, ?, ?, ?, ?, ?)";
+	        PreparedStatement statement = connection.prepareStatement(sql);
+	        statement.setString(1, name);
+	        statement.setInt(2, maxpart);
+	        statement.setString(3, location);
+	        statement.setInt(4, duration);
+	        statement.setInt(5, start);
+	        statement.setInt(6, finish);
+	        statement.executeUpdate();
+	        System.out.println("Activity saved to database.");
+	    } catch (SQLException e) {
+	        System.err.println("Error saving activity to database: " + e.getMessage());
+	    }
 	}
 
 	@Override

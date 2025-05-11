@@ -1,5 +1,8 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class Student {
     private String name;
@@ -52,6 +55,24 @@ public class Student {
 
     public double getBalance() {
         return balance;
+    }
+
+    public void saveToDatabase() {
+        try (Connection connection = DbConnection.connect()) {
+            String sql = "INSERT INTO students (name, surname, age, special_needs, total_expenses, fee_share, balance) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, name);
+            statement.setString(2, surname);
+            statement.setInt(3, age);
+            statement.setString(4, specialNeeds);
+            statement.setDouble(5, totalExpenses);
+            statement.setDouble(6, feeShare);
+            statement.setDouble(7, balance);
+            statement.executeUpdate();
+            System.out.println("Student saved to database.");
+        } catch (SQLException e) {
+            System.err.println("Error saving student to database: " + e.getMessage());
+        }
     }
 
     @Override

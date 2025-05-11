@@ -1,5 +1,8 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class Group {
     private List<Student> members;
@@ -38,5 +41,18 @@ public class Group {
 
     public void setDietaryNeeds(String dietaryNeeds) {
         this.dietaryNeeds = dietaryNeeds;
+    }
+
+    public void saveToDatabase() {
+        try (Connection connection = DbConnection.connect()) {
+            String sql = "INSERT INTO groups (common_activity, dietary_needs) VALUES (?, ?)";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, commonActivity);
+            statement.setString(2, dietaryNeeds);
+            statement.executeUpdate();
+            System.out.println("Group saved to database.");
+        } catch (SQLException e) {
+            System.err.println("Error saving group to database: " + e.getMessage());
+        }
     }
 }

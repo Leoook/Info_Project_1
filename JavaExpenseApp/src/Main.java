@@ -1,7 +1,8 @@
-import javax.swing.*;
-import java.awt.*;
-import models.Expense;
-import gui.ExpenseGUI;
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+
+
+
 
 public class Main {
     public static void main(String[] args) {

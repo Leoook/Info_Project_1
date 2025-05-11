@@ -1,10 +1,10 @@
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 public class DailyProgram {
     private Date day; // Represents the specific day
@@ -25,8 +25,8 @@ public class DailyProgram {
     }
 
     // Add an activity with participants
-    public void addActivity(Activity activity, List<Student> participants) {
-        activities.put(activity, participants);
+    public void addActivity(Activity Activity, List<Student> participants) {
+        activities.put(Activity, participants);
     }
 
     // Get all activities
@@ -35,13 +35,13 @@ public class DailyProgram {
     }
 
     // Get participants for a specific activity
-    public List<Student> getParticipants(Activity activity) {
-        return activities.get(activity);
+    public List<Student> getParticipants(Activity Activity) {
+        return activities.get(Activity);
     }
 
     // Remove an activity
-    public void removeActivity(Activity activity) {
-        activities.remove(activity);
+    public void removeActivity(Activity Activity) {
+        activities.remove(Activity);
     }
 
     public void saveToDatabase() {

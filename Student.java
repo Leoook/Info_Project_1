@@ -1,8 +1,8 @@
-import java.util.ArrayList;
-import java.util.List;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Student {
     private String name;
@@ -26,6 +26,15 @@ public class Student {
     }
 
     public void addActivity(Activity activity) { // Updated to accept Activity objects
+        try {
+            if (activity.isFull()) {
+                System.out.println("Activity '" + activity.getName() + "' is already full.");
+                return;
+            }
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         selectedActivities.add(activity);
     }
 

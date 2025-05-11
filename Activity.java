@@ -1,7 +1,7 @@
-import java.util.List;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
 
 public class Activity {
 	int id,maxpart,start,finish,duration;
@@ -20,7 +20,6 @@ public class Activity {
 		this.partecipants = partecipants;
 		this.Activityfeedback = feedback;
 	}
-
 	public int getId() {
 		return id;
 	}
@@ -93,6 +92,10 @@ public class Activity {
 		this.Activityfeedback = Activityfeedback;
 	}
 
+	public boolean isFull() {
+	    return partecipants.size() >= maxpart;
+	}
+
 	public void saveToDatabase() {
 	    try (Connection connection = DbConnection.connect()) {
 	        String sql = "INSERT INTO activities (name, max_participants, location, duration, start_time, finish_time) VALUES (?, ?, ?, ?, ?, ?)";
@@ -109,7 +112,7 @@ public class Activity {
 	        System.err.println("Error saving activity to database: " + e.getMessage());
 	    }
 	}
-
+  
 	@Override
 	public String toString() {
 		return "Activity [id=" + id + ", name=" + name + ", maxpart=" + maxpart + ", location=" + location

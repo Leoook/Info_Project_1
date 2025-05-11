@@ -1,6 +1,8 @@
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class Expense {
     private double amount;
@@ -11,6 +13,10 @@ public class Expense {
         this.amount = amount;
         this.description = description;
         this.date = date;
+    }
+
+    public Expense(double amount, String description) {
+        this(amount, description, new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
     }
 
     public double getAmount() {

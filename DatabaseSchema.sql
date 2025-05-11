@@ -38,10 +38,12 @@ CREATE TABLE group_members (
 );
 
 -- Table for expenses
+DROP TABLE IF EXISTS expenses;
 CREATE TABLE expenses (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    total INT,
+    amount DECIMAL(10,2),
     description TEXT,
+    date DATE,
     id_giver INT,
     id_receiver INT,
     id_activity INT,
@@ -51,10 +53,13 @@ CREATE TABLE expenses (
 );
 
 -- Table for feedback
+DROP TABLE IF EXISTS feedback;
 CREATE TABLE feedback (
     id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT,
+    student_name VARCHAR(255),
     activity_id INT,
+    activity_name VARCHAR(255),
     rating INT CHECK (rating BETWEEN 1 AND 5),
     comment TEXT,
     FOREIGN KEY (student_id) REFERENCES students(id),

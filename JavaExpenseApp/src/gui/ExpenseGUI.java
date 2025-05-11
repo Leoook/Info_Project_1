@@ -49,6 +49,7 @@ public class ExpenseGUI extends JFrame {
             double amount = Double.parseDouble(amountText);
             Expense expense = new Expense(amount, description);
             expenses.add(expense);
+            expense.saveToDatabase(); // Store directly in the database
             updateExpenseList();
             amountField.setText("");
             descriptionField.setText("");

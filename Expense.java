@@ -1,9 +1,9 @@
 import java.util.List;
 
 public class Expense {
- int E_id,total;
+ int E_id, total;
  String description; 
- //List payments; whats this for?
+ List payments;
  int ID_giver;
  int ID_receiver;
  int ID_activity;
@@ -18,7 +18,7 @@ public class Expense {
 	this.ID_receiver = ID_receiver;	
 	this.ID_activity = ID_activity;
  }
-}
+
 
 public int getE_Id() {
 	return E_id;
@@ -51,7 +51,7 @@ public List getPayments() {
 public void setPayments(List payments) {
 	this.payments = payments;
 }
-pubblic int getID_giver() {
+public int getID_giver() {
 	return ID_giver;
 }
 public void setID_giver(int ID_giver) {
@@ -70,9 +70,5 @@ public void setID_activity(int ID_activity) {
 	this.ID_activity = ID_activity;
 }
 
-@Override
-public String toString() {
-	return "Expense [id=" + id + ", total=" + total + ", description=" + description + ", payments=" + payments + "]";
-}
  
 }

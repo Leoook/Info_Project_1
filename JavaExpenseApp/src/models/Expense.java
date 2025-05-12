@@ -1,8 +1,13 @@
+package models;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import models.DbConnection;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+// import your DbConnection class with the correct package, for example:
+import DbConnection;
 
 public class Expense {
     private double amount;

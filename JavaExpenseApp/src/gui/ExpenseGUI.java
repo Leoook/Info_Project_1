@@ -1,8 +1,11 @@
+package gui;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import models.Expense;
 
 public class ExpenseGUI extends JFrame {
     private ArrayList<Expense> expenses;

@@ -26,7 +26,7 @@ public class Feedback {
     public String getComment() { return comment; }
 }
 
-class StudentLocal {
+/*class StudentLocal {
     private String name;
     private List<Feedback> feedbacks;
 
@@ -61,5 +61,5 @@ class ActivityLocal {
     public static boolean isFull() {
         throw new UnsupportedOperationException("Unimplemented method 'isFull'");
     }
-}
+}*/
 

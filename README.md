@@ -14,10 +14,7 @@
 2. **Create and activate a virtual environment (recommended):**
    ```sh
    python -m venv venv
-   # On Windows:
    venv\Scripts\activate
-   # On Linux/Mac:
-   source venv/bin/activate
    ```
 
 3. **Install dependencies:**

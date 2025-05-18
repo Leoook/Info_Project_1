@@ -66,6 +66,10 @@ public class Student {
         return balance;
     }
 
+    public Student(int id) {
+    this.id = id;
+}
+
     public void saveToDatabase() {
         try (Connection connection = DbConnection.connect()) {
             String sql = "INSERT INTO students (name, surname, age, special_needs, total_expenses, fee_share, balance) VALUES (?, ?, ?, ?, ?, ?, ?)";

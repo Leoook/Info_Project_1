@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 import mysql.connector
 from PythonExpenseApp.db_connection import DbConnection
-from expense import Expense
+from PythonExpenseApp.expense import Expense
 
 class ExpenseGUI:
     def __init__(self, root):
@@ -39,29 +39,28 @@ class ExpenseGUI:
         # Text area for expenses
         self.expense_list_area = tk.Text(self.root, state="normal")
         self.expense_list_area.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-def search_student(self):
-    name = self.name_entry.get()
-    if not name.strip():
-        messagebox.showerror("Error", "Please enter a student name.")
-        return
 
-    connection = DbConnection.connect()
-    if connection:
-        try:
-            sql = "SELECT id, surname FROM students WHERE name = %s LIMIT 1"
-            statement = connection.cursor()
-            statement.execute(sql, (name,))
-            result = statement.fetchone()
-            if result:
-                student_id, surname = result
-                self.student_id_var.set(student_id)
-                self.surname_var.set(surname)
-            else:
-                messagebox.showinfo("Not found", "No student found with that name.")
-        except mysql.connector.Error as e:
-            messagebox.showerror("Error", f"Database error: {e}")
+    def search_student(self):
+        name = self.name_entry.get()
+        if not name.strip():
+            messagebox.showerror("Error", "Please enter a student name.")
+            return
 
-    
+        connection = DbConnection.connect()
+        if connection:
+            try:
+                sql = "SELECT id, surname FROM students WHERE name = %s LIMIT 1"
+                statement = connection.cursor()
+                statement.execute(sql, (name,))
+                result = statement.fetchone()
+                if result:
+                    student_id, surname = result
+                    self.student_id_var.set(student_id)
+                    self.surname_var.set(surname)
+                else:
+                    messagebox.showinfo("Not found", "No student found with that name.")
+            except mysql.connector.Error as e:
+                messagebox.showerror("Error", f"Database error: {e}")
 
     def add_expense(self):
         amount_text = self.amount_entry.get()

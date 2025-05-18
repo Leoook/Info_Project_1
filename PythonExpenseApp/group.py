@@ -1,4 +1,4 @@
-from db_connection import DbConnection
+from PythonExpenseApp.db_connection import DbConnection
 import mysql.connector
 
 class Group:

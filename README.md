@@ -1,3 +1,64 @@
+# PythonExpenseApp
+
+## Requirements
+
+- Python 3.10 or newer
+- MySQL server
+- [mysql-connector-python](https://pypi.org/project/mysql-connector-python/)
+- Tkinter (usually included with Python)
+
+## Setup
+
+1. **Clone or download this repository.**
+
+2. **Create and activate a virtual environment (recommended):**
+   ```sh
+   python -m venv venv
+   # On Windows:
+   venv\Scripts\activate
+   # On Linux/Mac:
+   source venv/bin/activate
+   ```
+
+3. **Install dependencies:**
+   ```sh
+   pip install mysql-connector-python
+   ```
+
+4. **Set up the database:**
+   - Make sure MySQL server is running.
+   - Create a database named `project`.
+   - Import the provided SQL schema and example data:
+     ```sh
+     mysql -u root -p project < project_schema.sql
+     ```
+     (You may need to adjust the username/password.)
+
+5. **Configure database connection:**
+   - If your MySQL credentials are different, edit `PythonExpenseApp/db_connection.py` accordingly.
+
+## Running the Application
+
+From the root folder, run:
+```sh
+python -m PythonExpenseApp.main
+```
+or, if that doesn't work, try:
+```sh
+python PythonExpenseApp/main.py
+```
+
+## Usage
+
+- On launch, a window will appear to select between the Expense GUI and the Activity Form.
+- Use the GUIs to add expenses or subscribe students to activities.
+
+## Notes
+
+- Ensure your database tables match the schema in `project_schema.sql`.
+- All code is under the `PythonExpenseApp` package.
+- If you encounter import errors, make sure you are running from the project root and your Python path is correct.
+
 Tools:
 -Java (with the libraries needed: JDBC, Interface)
 -libraries: -all the utils

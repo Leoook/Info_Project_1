@@ -1,4 +1,4 @@
-# PythonExpenseApp
+# Trip Manager
 
 ## Requirements
 

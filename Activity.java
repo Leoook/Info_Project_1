@@ -2,12 +2,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
+import java.sql.ResultSet;
+import java.util.ArrayList;
 
 public class Activity {
 	int id,maxpart,start,finish,duration;
 	String name,location;
 	List partecipants;
-	List Activityfeedback;
+	List<Feedback> Activityfeedback;
 	
 	public Activity(int id, String name, int maxpart, String location, int duration, int start, int finish, List partecipants, List feedback) {
 		this.id = id;
@@ -112,6 +114,36 @@ public class Activity {
 	        System.err.println("Error saving activity to database: " + e.getMessage());
 	    }
 	}
+
+	public void loadFeedbackFromDatabase() {
+    List<Feedback> feedbackList = new ArrayList<>();
+    String sql = "SELECT * FROM feedback WHERE activity_id = ?";
+
+    try (Connection conn = DbConnection.connect();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+        stmt.setInt(1, this.id);
+        ResultSet rs = stmt.executeQuery();
+
+        while (rs.next()) {
+            int feedbackId = rs.getInt("id");
+            int studentId = rs.getInt("student_id");
+            int rating = rs.getInt("rating");
+            String comment = rs.getString("comment");
+
+            // metodo per trovare lo studente o crearne uno fittizio per ora
+            Student student = new Student(studentId); // da definire meglio
+
+            Feedback feedback = new Feedback(student, this, rating, comment);
+            feedbackList.add(feedback);
+        }
+
+        this.Activityfeedback = feedbackList;
+
+    } catch (Exception e) {
+        System.err.println("Errore durante il caricamento dei feedback: " + e.getMessage());
+    }
+}
   
 	@Override
 	public String toString() {

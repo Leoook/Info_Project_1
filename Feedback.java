@@ -26,6 +26,23 @@ public class Feedback {
     public String getComment() { return comment; }
 }
 
+//metodo per salvare il feedback nel database
+public void saveToDatabase() {
+        Connection conn = DbConnection.connect();
+        String sql = "INSERT INTO feedback (student_id, activity_id, rating, comment) VALUES (?, ?, ?, ?)";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, student.getId());
+            stmt.setInt(2, activity.getId());
+            stmt.setInt(3, rating);
+            stmt.setString(4, comment);
+            stmt.executeUpdate();
+            System.out.println("Feedback salvato nel database.");
+        } catch (SQLException e) {
+            System.err.println("Errore durante il salvataggio del feedback: " + e.getMessage());
+        }
+    }
+
 /*class StudentLocal {
     private String name;
     private List<Feedback> feedbacks;

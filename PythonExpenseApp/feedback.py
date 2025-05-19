@@ -1,3 +1,4 @@
+import sqlite3
 class Feedback:
     _id_counter = 1
 
@@ -23,6 +24,20 @@ class Feedback:
 
     def get_comment(self):
         return self.comment
+    
+def save_to_database(student, activity, rating, comment):
+    conn = sqlite3.connect('your_database.db')  # Update with your database path
+    sql = "INSERT INTO feedback (student_id, activity_id, rating, comment) VALUES (?, ?, ?, ?)"
+    
+    try:
+        with conn:
+            stmt = conn.cursor()
+            stmt.execute(sql, (student.id, activity.id, rating, comment))
+            print("Feedback salvato nel database.")
+    except sqlite3.Error as e:
+        print("Errore durante il salvataggio del feedback:", e)
+
 
     def __str__(self):
         return f"Feedback(id={self.id}, rating={self.rating}, comment='{self.comment}')"
+    

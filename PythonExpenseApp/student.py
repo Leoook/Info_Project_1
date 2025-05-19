@@ -41,6 +41,9 @@ class Student:
 
     def get_balance(self):
         return self.balance
+    
+    def __init__(self, id):
+        self.id = id
 
     def save_to_database(self):
         connection = DbConnection.connect()

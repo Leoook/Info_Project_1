@@ -1,6 +1,7 @@
 from PythonExpenseApp.db_connection import DbConnection
 import mysql.connector
-
+import sqlite3
+import list
 class Activity:
     def __init__(self, id_, name, maxpart, location, duration, start, finish, participants, feedback):
         self.id = id_
@@ -42,3 +43,34 @@ class Activity:
                 f"location={self.location}, duration={self.duration}, start={self.start}, "
                 f"finish={self.finish}, participants={self.participants}, "
                 f"feedback={self.activity_feedback}]")
+    
+    def load_feedback_from_database(self):
+    feedback_list = []
+    sql = "SELECT * FROM feedback WHERE activity_id = ?"
+
+    try:
+        conn = sqlite3.connect('your_database.db')  # Update with your database path
+        cursor = conn.cursor()
+        cursor.execute(sql, (self.id,))
+
+        rows = cursor.fetchall()
+
+        for row in rows:
+            feedback_id = row[0]  # Assuming 'id' is the first column
+            student_id = row[1]   # Assuming 'student_id' is the second column
+            rating = row[2]       # Assuming 'rating' is the third column
+            comment = row[3]      # Assuming 'comment' is the fourth column
+
+            # Method to find the student or create a placeholder for now
+            student = Student(student_id)  # To be defined better
+
+            feedback = Feedback(student, self, rating, comment)
+            feedback_list.append(feedback)
+
+        self.Activityfeedback = feedback_list
+
+    except Exception as e:
+        print("Errore durante il caricamento dei feedback:", e)
+    finally:
+        if conn:
+            conn.close()

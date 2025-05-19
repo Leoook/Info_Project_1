@@ -28,3 +28,4 @@ if __name__ == "__main__":
     tk.Button(root, text="Activity Form", command=lambda: [root.destroy(), show_activity_form()]).pack(pady=5)
 
     root.mainloop()
+ #bla bla

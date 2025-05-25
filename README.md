@@ -1,5 +1,29 @@
 # Trip Manager
 
+> **Note:** All variables and functions in the code are commented for clarity.  
+> Each class and method includes a description of its purpose and usage.
+
+## Project Overview
+
+This project is a Python application for managing school trips, including:
+- Student registration and management
+- Activity management and student subscriptions
+- Expense tracking and management
+- Feedback collection and statistics
+
+**Main files and their roles:**
+- `main.py`: Entry point, launches the main menu and GUI windows.
+- `student.py`: Defines the Student class and its database logic.
+- `activity.py`: Defines the Activity class and its database logic.
+- `group.py`: Defines the Group class for student grouping.
+- `expense.py`: Defines the Expense class and its database logic.
+- `gui/expense_gui.py`: Contains the ExpenseGUI class for the expense management interface.
+- `gui/activity_form_gui.py`: Contains the ActivityFormGUI class for activity subscription.
+- `db_connection.py`: Handles MySQL database connections.
+- `statistics.py`: Provides statistics and analytics on activities and feedback.
+- `feedback.py`: Defines the Feedback class and feedback database logic.
+- `daily_program.py`: Manages the daily schedule of activities.
+
 ## Requirements
 
 - Python 3.10 or newer

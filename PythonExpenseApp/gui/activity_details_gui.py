@@ -2,9 +2,16 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from PythonExpenseApp.activity import Activity
 from PythonExpenseApp.feedback import Feedback
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import numpy as np
+
+# Try to import matplotlib, but provide fallback if not available
+try:
+    import matplotlib.pyplot as plt
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    import numpy as np
+    MATPLOTLIB_AVAILABLE = True
+except ImportError:
+    MATPLOTLIB_AVAILABLE = False
+    print("Matplotlib not available. Charts will be displayed as text.")
 
 class ActivityDetailsGUI:
     def __init__(self, root, activity_id, student=None, main_callback=None):
@@ -43,11 +50,10 @@ class ActivityDetailsGUI:
         self.notebook = ttk.Notebook(main_container)
         self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
-        # Create tabs
+        # Create tabs (removed sentiment tab)
         self.create_overview_tab()
         self.create_ratings_tab()
         self.create_feedback_tab()
-        self.create_sentiment_tab()
 
     def create_header(self, parent):
         header_frame = tk.Frame(parent, bg='#ffffff', height=80)
@@ -236,7 +242,7 @@ class ActivityDetailsGUI:
         self.notebook.add(feedback_frame, text="Feedback")
         
         # Feedback list
-        feedback_list_frame = tk.LabelFrame(feedback_frame, text="Recent Feedback", 
+        feedback_list_frame = tk.LabelFrame(feedback_frame, text="Student Feedback", 
                                            font=("Segoe UI", 14, "bold"), bg="#ffffff")
         feedback_list_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
         
@@ -256,14 +262,6 @@ class ActivityDetailsGUI:
         feedback_canvas.pack(side="left", fill="both", expand=True, padx=10, pady=10)
         feedback_scrollbar.pack(side="right", fill="y", pady=10)
 
-    def create_sentiment_tab(self):
-        sentiment_frame = tk.Frame(self.notebook, bg='#ffffff')
-        self.notebook.add(sentiment_frame, text="Sentiment Analysis")
-        
-        # Sentiment analysis content
-        self.sentiment_content_frame = tk.Frame(sentiment_frame, bg='#ffffff')
-        self.sentiment_content_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
-
     def load_activity_details(self):
         details = self.activity.get_comprehensive_details()
         if not details:
@@ -273,7 +271,6 @@ class ActivityDetailsGUI:
         self.load_rating_summary(details['ratings'])
         self.load_detailed_ratings(details['ratings'])
         self.load_feedback_list(details['recent_feedback'])
-        self.load_sentiment_analysis(details['sentiment_words'])
 
     def load_participation_info(self, participation_data):
         # Clear existing content
@@ -378,170 +375,180 @@ class ActivityDetailsGUI:
             no_ratings_label.pack(expand=True)
             return
         
-        # Create rating distribution chart
-        self.create_rating_distribution_chart(ratings_data)
+        # Create rating display (chart if matplotlib available, otherwise text)
+        if MATPLOTLIB_AVAILABLE:
+            self.create_rating_distribution_chart(ratings_data)
+        else:
+            self.create_rating_distribution_text(ratings_data)
 
     def create_rating_distribution_chart(self, ratings_data):
-        # Create matplotlib figure
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-        fig.patch.set_facecolor('white')
-        
-        # Rating distribution bar chart
-        ratings = [1, 2, 3, 4, 5]
-        counts = [ratings_data['rating_distribution'][i] for i in ratings]
-        colors = ['#dc2626', '#f97316', '#eab308', '#22c55e', '#059669']
-        
-        bars = ax1.bar(ratings, counts, color=colors, alpha=0.8)
-        ax1.set_xlabel('Rating')
-        ax1.set_ylabel('Number of Reviews')
-        ax1.set_title('Rating Distribution')
-        ax1.set_xticks(ratings)
-        
-        # Add value labels on bars
-        for bar, count in zip(bars, counts):
-            if count > 0:
-                ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1, 
-                        str(count), ha='center', va='bottom')
-        
-        # Rating summary pie chart
-        non_zero_ratings = [(i, count) for i, count in enumerate(counts, 1) if count > 0]
-        if non_zero_ratings:
-            pie_labels = [f"{rating} Stars" for rating, _ in non_zero_ratings]
-            pie_values = [count for _, count in non_zero_ratings]
-            pie_colors = [colors[rating-1] for rating, _ in non_zero_ratings]
+        try:
+            # Create matplotlib figure
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+            fig.patch.set_facecolor('white')
             
-            ax2.pie(pie_values, labels=pie_labels, colors=pie_colors, autopct='%1.1f%%', startangle=90)
-            ax2.set_title('Rating Breakdown')
-        
-        plt.tight_layout()
-        
-        # Embed in tkinter
-        canvas = FigureCanvasTkAgg(fig, self.ratings_content_frame)
-        canvas.draw()
-        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-
-    def load_feedback_list(self, feedback_data):
-        # Clear existing content
-        for widget in self.feedback_content_frame.winfo_children():
-            widget.destroy()
-        
-        if not feedback_data:
-            no_feedback_label = tk.Label(self.feedback_content_frame, text="No feedback yet", 
-                                        font=("Segoe UI", 12), bg="#ffffff", fg="#6b7280")
-            no_feedback_label.pack(anchor='w', pady=20)
+            # Rating distribution bar chart
+            ratings = [1, 2, 3, 4, 5]
+            counts = [ratings_data['rating_distribution'][i] for i in ratings]
+            colors = ['#dc2626', '#f97316', '#eab308', '#22c55e', '#059669']
             
-            # Show feedback statistics
-            feedback_stats = self.activity.get_feedback_statistics()
-            if feedback_stats.get('total_participants', 0) > 0:
-                stats_text = f"📊 {feedback_stats['total_participants']} participants, "
-                stats_text += f"{feedback_stats['feedback_given']} feedback given "
-                stats_text += f"({feedback_stats['feedback_percentage']:.1f}%)"
+            bars = ax1.bar(ratings, counts, color=colors, alpha=0.8)
+            ax1.set_xlabel('Rating (Stars)')
+            ax1.set_ylabel('Number of Reviews')
+            ax1.set_title('Rating Distribution')
+            ax1.set_xticks(ratings)
+            ax1.set_ylim(0, max(counts) + 1 if max(counts) > 0 else 1)
+            
+            # Add value labels on bars
+            for bar, count in zip(bars, counts):
+                if count > 0:
+                    ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1, 
+                            str(count), ha='center', va='bottom', fontweight='bold')
+            
+            # Rating summary pie chart
+            non_zero_ratings = [(i, count) for i, count in enumerate(counts, 1) if count > 0]
+            if non_zero_ratings:
+                # Use text instead of star symbols to avoid font issues
+                pie_labels = [f"{rating} Stars" for rating, _ in non_zero_ratings]
+                pie_values = [count for _, count in non_zero_ratings]
+                pie_colors = [colors[rating-1] for rating, _ in non_zero_ratings]
                 
-                stats_label = tk.Label(self.feedback_content_frame, text=stats_text, 
-                                      font=("Segoe UI", 11), bg="#ffffff", fg="#6b7280")
-                stats_label.pack(anchor='w', pady=10)
-            return
-        
-        # Show feedback statistics at the top
-        feedback_stats = self.activity.get_feedback_statistics()
-        if feedback_stats:
-            stats_frame = tk.Frame(self.feedback_content_frame, bg="#e0f2fe", relief='solid', bd=1)
-            stats_frame.pack(fill=tk.X, padx=10, pady=(10, 20))
+                wedges, texts, autotexts = ax2.pie(pie_values, labels=pie_labels, colors=pie_colors, 
+                                                  autopct='%1.1f%%', startangle=90)
+                ax2.set_title('Rating Breakdown')
+                
+                # Make percentage text bold
+                for autotext in autotexts:
+                    autotext.set_color('white')
+                    autotext.set_fontweight('bold')
+            else:
+                ax2.text(0.5, 0.5, 'No ratings yet', ha='center', va='center', transform=ax2.transAxes)
+                ax2.set_title('Rating Breakdown')
             
-            stats_text = f"📊 Feedback Summary: {feedback_stats['feedback_given']}/{feedback_stats['total_participants']} "
-            stats_text += f"participants ({feedback_stats['feedback_percentage']:.1f}%) have provided feedback"
+            plt.tight_layout()
             
-            stats_label = tk.Label(stats_frame, text=stats_text, 
-                                  font=("Segoe UI", 12, "bold"), bg="#e0f2fe", fg="#0369a1")
-            stats_label.pack(padx=15, pady=10)
-        
-        for rating, comment, created_at, student_name, student_surname in feedback_data:
-            feedback_frame = tk.Frame(self.feedback_content_frame, bg="#f8fafc", 
-                                     relief='solid', bd=1)
-            feedback_frame.pack(fill=tk.X, padx=10, pady=5)
+            # Embed in tkinter
+            canvas = FigureCanvasTkAgg(fig, self.ratings_content_frame)
+            canvas.draw()
+            canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
             
-            # Header with rating and student info
-            header_frame = tk.Frame(feedback_frame, bg="#f8fafc")
-            header_frame.pack(fill=tk.X, padx=15, pady=(10, 5))
+            # Add statistics below the chart
+            self.create_rating_statistics_text(ratings_data)
             
-            stars = "⭐" * rating
-            rating_label = tk.Label(header_frame, text=stars, 
-                                   font=("Segoe UI", 12), bg="#f8fafc")
-            rating_label.pack(side=tk.LEFT)
-            
-            student_label = tk.Label(header_frame, text=f" by {student_name} {student_surname}", 
-                                    font=("Segoe UI", 10, "bold"), bg="#f8fafc", fg="#6b7280")
-            student_label.pack(side=tk.LEFT)
-            
-            # Verified participant badge
-            verified_label = tk.Label(header_frame, text="✅ Verified Participant", 
-                                     font=("Segoe UI", 9), bg="#f8fafc", fg="#059669")
-            verified_label.pack(side=tk.RIGHT)
-            
-            date_label = tk.Label(header_frame, text=f"{created_at.strftime('%Y-%m-%d')}", 
-                                 font=("Segoe UI", 10), bg="#f8fafc", fg="#6b7280")
-            date_label.pack(side=tk.RIGHT, padx=(0, 10))
-            
-            # Comment
-            if comment:
-                comment_label = tk.Label(feedback_frame, text=comment, 
-                                        font=("Segoe UI", 11), bg="#f8fafc", 
-                                        wraplength=600, justify=tk.LEFT)
-                comment_label.pack(anchor='w', padx=15, pady=(0, 10))
+        except Exception as e:
+            print(f"Error creating chart: {e}")
+            # Fallback to text display
+            self.create_rating_distribution_text(ratings_data)
 
-    def load_sentiment_analysis(self, sentiment_data):
-        # Clear existing content
-        for widget in self.sentiment_content_frame.winfo_children():
-            widget.destroy()
+    def create_rating_distribution_text(self, ratings_data):
+        """Text-based rating distribution display"""
+        stats_frame = tk.Frame(self.ratings_content_frame, bg="#ffffff")
+        stats_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
         
-        if not sentiment_data:
-            no_sentiment_label = tk.Label(self.sentiment_content_frame, text="No sentiment data available", 
-                                         font=("Segoe UI", 14), bg="#ffffff", fg="#6b7280")
-            no_sentiment_label.pack(expand=True)
-            return
+        # Title
+        title_label = tk.Label(stats_frame, text="📊 Rating Distribution", 
+                              font=("Segoe UI", 18, "bold"), bg="#ffffff", fg="#1e293b")
+        title_label.pack(anchor='w', pady=(0, 20))
         
-        # Group words by sentiment
-        positive_words = [w for w in sentiment_data if w['sentiment'] == 'positive']
-        negative_words = [w for w in sentiment_data if w['sentiment'] == 'negative']
-        neutral_words = [w for w in sentiment_data if w['sentiment'] == 'neutral']
+        # Overall statistics
+        overall_frame = tk.LabelFrame(stats_frame, text="Overall Statistics", 
+                                     font=("Segoe UI", 14, "bold"), bg="#ffffff")
+        overall_frame.pack(fill=tk.X, pady=(0, 20))
         
-        # Create sentiment sections
-        self.create_sentiment_section("Positive Words", positive_words, "#22c55e")
-        self.create_sentiment_section("Negative Words", negative_words, "#dc2626")
-        self.create_sentiment_section("Neutral Words", neutral_words, "#6b7280")
-
-    def create_sentiment_section(self, title, words, color):
-        if not words:
-            return
+        overall_content = tk.Frame(overall_frame, bg="#ffffff")
+        overall_content.pack(fill=tk.X, padx=15, pady=15)
         
-        section_frame = tk.LabelFrame(self.sentiment_content_frame, text=title, 
-                                     font=("Segoe UI", 14, "bold"), bg="#ffffff", 
-                                     fg=color)
-        section_frame.pack(fill=tk.X, padx=10, pady=10)
+        # Average rating with stars
+        avg_rating = ratings_data['average_rating']
+        stars = "⭐" * int(round(avg_rating))
+        avg_text = f"Average Rating: {stars} {avg_rating:.2f}/5.0"
         
-        words_frame = tk.Frame(section_frame, bg="#ffffff")
-        words_frame.pack(fill=tk.X, padx=15, pady=15)
+        avg_label = tk.Label(overall_content, text=avg_text, 
+                            font=("Segoe UI", 14, "bold"), bg="#ffffff", fg="#f59e0b")
+        avg_label.pack(anchor='w', pady=2)
         
-        for i, word_data in enumerate(words[:10]):  # Show top 10 words
-            word_frame = tk.Frame(words_frame, bg="#ffffff")
-            word_frame.pack(fill=tk.X, pady=2)
+        median_label = tk.Label(overall_content, text=f"Median Rating: {ratings_data['median_rating']:.1f}", 
+                               font=("Segoe UI", 12), bg="#ffffff", fg="#6b7280")
+        median_label.pack(anchor='w', pady=2)
+        
+        total_label = tk.Label(overall_content, text=f"Total Reviews: {ratings_data['total_ratings']}", 
+                              font=("Segoe UI", 12), bg="#ffffff", fg="#6b7280")
+        total_label.pack(anchor='w', pady=2)
+        
+        # Distribution details
+        dist_frame = tk.LabelFrame(stats_frame, text="Rating Breakdown", 
+                                  font=("Segoe UI", 14, "bold"), bg="#ffffff")
+        dist_frame.pack(fill=tk.X, pady=(0, 20))
+        
+        dist_content = tk.Frame(dist_frame, bg="#ffffff")
+        dist_content.pack(fill=tk.X, padx=15, pady=15)
+        
+        colors = ['#dc2626', '#f97316', '#eab308', '#22c55e', '#059669']
+        max_count = max(ratings_data['rating_distribution'].values()) if ratings_data['rating_distribution'] else 1
+        
+        for rating in [5, 4, 3, 2, 1]:  # Show 5-star first
+            count = ratings_data['rating_distribution'][rating]
+            percentage = (count / ratings_data['total_ratings']) * 100 if ratings_data['total_ratings'] > 0 else 0
             
-            word_text = f"{word_data['word']} ({word_data['frequency']})"
-            word_label = tk.Label(word_frame, text=word_text, 
-                                 font=("Segoe UI", 11), bg="#ffffff")
-            word_label.pack(side=tk.LEFT)
+            rating_frame = tk.Frame(dist_content, bg="#ffffff")
+            rating_frame.pack(fill=tk.X, pady=3)
             
-            # Frequency bar
-            bar_frame = tk.Frame(word_frame, bg="#e5e7eb", height=10, width=100)
-            bar_frame.pack(side=tk.RIGHT, padx=(10, 0))
+            # Star rating
+            star_label = tk.Label(rating_frame, text=f"{rating} ⭐", 
+                                 font=("Segoe UI", 12, "bold"), bg="#ffffff", 
+                                 fg=colors[rating-1], width=8)
+            star_label.pack(side=tk.LEFT)
+            
+            # Progress bar simulation
+            bar_frame = tk.Frame(rating_frame, bg="#e5e7eb", height=20, width=200)
+            bar_frame.pack(side=tk.LEFT, padx=(10, 10))
             bar_frame.pack_propagate(False)
             
-            max_freq = max(w['frequency'] for w in words) if words else 1
-            bar_width = int((word_data['frequency'] / max_freq) * 100)
-            
-            if bar_width > 0:
-                bar = tk.Frame(bar_frame, bg=color, height=10, width=bar_width)
+            if count > 0:
+                bar_width = int((count / max_count) * 200)
+                bar = tk.Frame(bar_frame, bg=colors[rating-1], height=20, width=bar_width)
                 bar.pack(side=tk.LEFT)
+            
+            # Count and percentage
+            count_label = tk.Label(rating_frame, text=f"{count} ({percentage:.1f}%)", 
+                                  font=("Segoe UI", 11), bg="#ffffff", fg="#374151")
+            count_label.pack(side=tk.LEFT, padx=(10, 0))
+
+    def create_rating_statistics_text(self, ratings_data):
+        """Add additional statistics below charts"""
+        stats_text_frame = tk.Frame(self.ratings_content_frame, bg="#f8fafc", relief='solid', bd=1)
+        stats_text_frame.pack(fill=tk.X, padx=10, pady=10)
+        
+        stats_content = tk.Frame(stats_text_frame, bg="#f8fafc")
+        stats_content.pack(fill=tk.X, padx=15, pady=10)
+        
+        # Calculate additional statistics
+        total = ratings_data['total_ratings']
+        dist = ratings_data['rating_distribution']
+        
+        positive_ratings = dist[4] + dist[5]  # 4 and 5 stars
+        negative_ratings = dist[1] + dist[2]  # 1 and 2 stars
+        neutral_ratings = dist[3]  # 3 stars
+        
+        positive_pct = (positive_ratings / total) * 100 if total > 0 else 0
+        negative_pct = (negative_ratings / total) * 100 if total > 0 else 0
+        neutral_pct = (neutral_ratings / total) * 100 if total > 0 else 0
+        
+        stats_title = tk.Label(stats_content, text="📈 Quick Statistics", 
+                              font=("Segoe UI", 12, "bold"), bg="#f8fafc", fg="#1e293b")
+        stats_title.pack(anchor='w', pady=(0, 5))
+        
+        positive_label = tk.Label(stats_content, text=f"👍 Positive (4-5 ⭐): {positive_ratings} ({positive_pct:.1f}%)", 
+                                 font=("Segoe UI", 11), bg="#f8fafc", fg="#059669")
+        positive_label.pack(anchor='w', pady=1)
+        
+        neutral_label = tk.Label(stats_content, text=f"😐 Neutral (3 ⭐): {neutral_ratings} ({neutral_pct:.1f}%)", 
+                                font=("Segoe UI", 11), bg="#f8fafc", fg="#f59e0b")
+        neutral_label.pack(anchor='w', pady=1)
+        
+        negative_label = tk.Label(stats_content, text=f"👎 Negative (1-2 ⭐): {negative_ratings} ({negative_pct:.1f}%)", 
+                                 font=("Segoe UI", 11), bg="#f8fafc", fg="#dc2626")
+        negative_label.pack(anchor='w', pady=1)
 
     def register_for_activity(self):
         # Implementation for registering student to activity
@@ -655,3 +662,98 @@ class ActivityDetailsGUI:
                               font=("Segoe UI", 12), bg="#6b7280", fg="white",
                               command=feedback_window.destroy)
         cancel_btn.pack(side=tk.RIGHT)
+
+    def load_feedback_list(self, feedback_data):
+        """Load and display feedback list"""
+        # Clear existing content
+        for widget in self.feedback_content_frame.winfo_children():
+            widget.destroy()
+        
+        if not feedback_data:
+            # No feedback available
+            no_feedback_frame = tk.Frame(self.feedback_content_frame, bg='#ffffff')
+            no_feedback_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=50)
+            
+            no_feedback_label = tk.Label(no_feedback_frame, text="📝 No feedback available yet", 
+                                        font=("Segoe UI", 16, "bold"), bg="#ffffff", fg="#6b7280")
+            no_feedback_label.pack()
+            
+            help_label = tk.Label(no_feedback_frame, text="Students can leave feedback after participating in the activity", 
+                                 font=("Segoe UI", 12), bg="#ffffff", fg="#9ca3af")
+            help_label.pack(pady=(10, 0))
+            return
+        
+        # Display feedback entries
+        for i, (rating, comment, created_at, name, surname) in enumerate(feedback_data):
+            # Create feedback card
+            feedback_card = tk.Frame(self.feedback_content_frame, bg='#f8fafc', relief='solid', bd=1)
+            feedback_card.pack(fill=tk.X, padx=10, pady=8)
+            
+            # Card content
+            card_content = tk.Frame(feedback_card, bg='#f8fafc')
+            card_content.pack(fill=tk.X, padx=15, pady=15)
+            
+            # Header with rating and student info
+            header_frame = tk.Frame(card_content, bg='#f8fafc')
+            header_frame.pack(fill=tk.X, pady=(0, 10))
+            
+            # Rating stars
+            stars = "⭐" * rating
+            rating_label = tk.Label(header_frame, text=stars, 
+                                   font=("Segoe UI", 14, "bold"), bg="#f8fafc", fg="#f59e0b")
+            rating_label.pack(side=tk.LEFT)
+            
+            # Student name
+            student_label = tk.Label(header_frame, text=f" by {name} {surname}", 
+                                    font=("Segoe UI", 12, "bold"), bg="#f8fafc", fg="#1e293b")
+            student_label.pack(side=tk.LEFT)
+            
+            # Date
+            from datetime import datetime
+            if isinstance(created_at, str):
+                date_str = created_at
+            else:
+                date_str = created_at.strftime("%Y-%m-%d %H:%M") if created_at else "Unknown date"
+            
+            date_label = tk.Label(header_frame, text=date_str, 
+                                 font=("Segoe UI", 10), bg="#f8fafc", fg="#6b7280")
+            date_label.pack(side=tk.RIGHT)
+            
+            # Verified participant badge
+            verified_label = tk.Label(header_frame, text="✅ Verified Participant", 
+                                     font=("Segoe UI", 10, "bold"), bg="#f8fafc", fg="#059669")
+            verified_label.pack(side=tk.RIGHT, padx=(0, 10))
+            
+            # Comment (if available)
+            if comment and comment.strip():
+                comment_frame = tk.Frame(card_content, bg='#ffffff', relief='solid', bd=1)
+                comment_frame.pack(fill=tk.X, pady=(0, 5))
+                
+                comment_text = tk.Text(comment_frame, height=3, font=("Segoe UI", 11), 
+                                      bg="#ffffff", fg="#374151", relief='flat', bd=0, 
+                                      wrap=tk.WORD, cursor="arrow")
+                comment_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=8)
+                comment_text.insert('1.0', comment)
+                comment_text.config(state='disabled')
+            else:
+                # No comment placeholder
+                no_comment_label = tk.Label(card_content, text="(No written comment provided)", 
+                                           font=("Segoe UI", 10, "italic"), bg="#f8fafc", fg="#9ca3af")
+                no_comment_label.pack(anchor='w')
+        
+        # Add summary at the end
+        if len(feedback_data) > 0:
+            summary_frame = tk.Frame(self.feedback_content_frame, bg='#e0f2fe', relief='solid', bd=1)
+            summary_frame.pack(fill=tk.X, padx=10, pady=(20, 10))
+            
+            summary_content = tk.Frame(summary_frame, bg='#e0f2fe')
+            summary_content.pack(fill=tk.X, padx=15, pady=10)
+            
+            total_participants = self.activity.get_current_participants()
+            feedback_count = len(feedback_data)
+            completion_rate = (feedback_count / total_participants * 100) if total_participants > 0 else 0
+            
+            summary_text = f"📊 {feedback_count} feedback entries from {total_participants} participants ({completion_rate:.1f}% completion rate)"
+            summary_label = tk.Label(summary_content, text=summary_text, 
+                                    font=("Segoe UI", 12, "bold"), bg="#e0f2fe", fg="#0277bd")
+            summary_label.pack()

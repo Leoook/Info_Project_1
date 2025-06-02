@@ -1,154 +1,442 @@
-# Trip Manager
+# Trip Manager - Complete Student Trip Management System
 
-> **Note:** All variables and functions in the code are commented for clarity.  
-> Each class and method includes a description of its purpose and usage.
+> **A comprehensive Python-based application for managing school trips, activities, expenses, and student feedback with an intuitive GUI interface.**
 
-## Project Overview
+## 📋 Table of Contents
+- [Project Overview](#project-overview)
+- [Features](#features)
+- [System Requirements](#system-requirements)
+- [Installation & Setup](#installation--setup)
+- [Database Setup](#database-setup)
+- [Running the Application](#running-the-application)
+- [User Guide](#user-guide)
+- [Program Structure](#program-structure)
+- [Database Schema](#database-schema)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
 
-This project is a Python application for managing school trips, including:
-- Student registration and management
-- Activity management and student subscriptions
-- Expense tracking and management
-- Feedback collection and statistics
+## 🎯 Project Overview
 
-**Main files and their roles:**
-- `main.py`: Entry point, launches the main menu and GUI windows.
-- `student.py`: Defines the Student class and its database logic.
-- `activity.py`: Defines the Activity class and its database logic.
-- `group.py`: Defines the Group class for student grouping.
-- `expense.py`: Defines the Expense class and its database logic.
-- `gui/expense_gui.py`: Contains the ExpenseGUI class for the expense management interface.
-- `gui/activity_form_gui.py`: Contains the ActivityFormGUI class for activity subscription.
-- `db_connection.py`: Handles MySQL database connections.
-- `statistics.py`: Provides statistics and analytics on activities and feedback.
-- `feedback.py`: Defines the Feedback class and feedback database logic.
-- `daily_program.py`: Manages the daily schedule of activities.
+Trip Manager is a comprehensive application designed to streamline the management of school trips. It provides tools for:
 
-## Requirements
+- **Student Management**: Registration, authentication, and profile management
+- **Activity Management**: Creating, scheduling, and managing trip activities
+- **Expense Tracking**: Recording and splitting expenses among participants
+- **Feedback System**: Collecting and analyzing student feedback with sentiment analysis
+- **Statistics & Analytics**: Comprehensive reporting and data visualization
 
-- Python 3.10 or newer
-- MySQL server
-- [mysql-connector-python](https://pypi.org/project/mysql-connector-python/)
-- Tkinter (usually included with Python)
+## ✨ Features
 
-## Setup
+### Core Features
+- 🔐 **Secure Login System** - Student authentication with username/password
+- 🎯 **Activity Subscription** - Students can browse and subscribe to activities
+- 💰 **Expense Management** - Track shared expenses and calculate debt settlements
+- 📝 **Feedback Collection** - Rate activities and leave comments (participation required)
+- 📊 **Real-time Statistics** - Sentiment analysis and activity popularity metrics
+- 🗓️ **Schedule Management** - Daily activity schedules and conflict detection
 
-1. **Clone or download this repository.**
+### Advanced Features
+- **Sentiment Analysis** - Automatic analysis of feedback comments
+- **Debt Tracking** - Who owes whom and how much
+- **Conflict Detection** - Prevents scheduling conflicts for students
+- **Participation Validation** - Only participants can leave feedback
+- **Real-time Updates** - Live data refresh across all components
 
-2. **Create and activate a virtual environment (recommended):**
-   ```sh
-   python -m venv venv
-   venv\Scripts\activate
-   ```
+## 🖥️ System Requirements
 
-3. **Install dependencies:**
-   ```sh
-   pip install mysql-connector-python
-   ```
+### Software Requirements
+- **Python**: 3.8 or newer (3.10+ recommended)
+- **MySQL Server**: 8.0 or newer
+- **Operating System**: Windows 10/11, macOS 10.14+, or Linux
 
-4. **Set up the database:**
-   - Make sure MySQL server is running.
-   - Create a database named `project`.
-   - Import the provided SQL schema and example data:
-     ```sh
-     mysql -u root -p project < project_schema.sql
-     ```
-     (You may need to adjust the username/password.)
+### Python Dependencies
+- `mysql-connector-python`: Database connectivity
+- `tkinter`: GUI framework (usually included with Python)
+- `PIL (Pillow)`: Image processing for GUI
+- `datetime`: Date/time handling (built-in)
+- `re`: Regular expressions (built-in)
 
-5. **Configure database connection:**
-   - If your MySQL credentials are different, edit `PythonExpenseApp/db_connection.py` accordingly.
+## 🚀 Installation & Setup
 
-## Running the Application
+### Step 1: Clone the Repository
+```bash
+git clone <repository-url>
+cd Info_Project_1
+```
 
-From the root folder, run:
-```sh
+### Step 2: Create Virtual Environment (Recommended)
+```bash
+# Create virtual environment
+python -m venv trip_manager_env
+
+# Activate virtual environment
+# Windows:
+trip_manager_env\Scripts\activate
+# macOS/Linux:
+source trip_manager_env/bin/activate
+```
+
+### Step 3: Install Dependencies
+```bash
+# Install required packages
+pip install mysql-connector-python Pillow
+
+# Or use requirements file if available
+pip install -r requirements.txt
+```
+
+### Step 4: Verify Installation
+```bash
+python -c "import mysql.connector, tkinter, PIL; print('All dependencies installed successfully!')"
+```
+
+## 🗄️ Database Setup
+
+### Step 1: Install MySQL
+1. Download and install MySQL Server from [mysql.com](https://dev.mysql.com/downloads/)
+2. During installation, remember your root password
+3. Start the MySQL service
+
+### Step 2: Create Database
+```sql
+-- Connect to MySQL as root
+mysql -u root -p
+
+-- Create the database
+CREATE DATABASE trip_manager;
+
+-- Create a user for the application (optional but recommended)
+CREATE USER 'trip_user'@'localhost' IDENTIFIED BY 'secure_password';
+GRANT ALL PRIVILEGES ON trip_manager.* TO 'trip_user'@'localhost';
+FLUSH PRIVILEGES;
+
+-- Use the database
+USE trip_manager;
+```
+
+### Step 3: Import Schema
+```bash
+# Import the database schema
+mysql -u root -p trip_manager < database_schema.sql
+```
+
+### Step 4: Configure Connection
+Edit `PythonExpenseApp/db_connection.py` if needed:
+```python
+# Update these values to match your MySQL setup
+'host': 'localhost',
+'database': 'trip_manager',
+'user': 'trip_user',  # or 'root'
+'password': 'your_password'
+```
+
+## ▶️ Running the Application
+
+### Method 1: From Project Root
+```bash
+# Navigate to project root directory
+cd c:\Users\Utente\Documents\scola\Info\progetto\Info_Project_1
+
+# Run the application
 python -m PythonExpenseApp.main
 ```
-or, if that doesn't work, try:
-```sh
-python PythonExpenseApp/main.py
+
+### Method 2: Direct Execution
+```bash
+# Navigate to the PythonExpenseApp directory
+cd PythonExpenseApp
+
+# Run main.py directly
+python main.py
 ```
 
-## Usage
+### Method 3: IDE Integration
+- **PyCharm**: Open the project folder and run `main.py`
+- **VS Code**: Open the project folder and run `python -m PythonExpenseApp.main` in terminal
+- **IDLE**: Open `main.py` and press F5
 
-- On launch, a window will appear to select between the Expense GUI and the Activity Form.
-- Use the GUIs to add expenses or subscribe students to activities.
+## 📖 User Guide
 
-## Notes
+### First Time Setup
+1. **Start the Application**: Run using one of the methods above
+2. **Database Check**: The app will verify database connectivity on startup
+3. **Login**: Use the default credentials or create new student accounts
 
-- Ensure your database tables match the schema in `project_schema.sql`.
-- All code is under the `PythonExpenseApp` package.
-- If you encounter import errors, make sure you are running from the project root and your Python path is correct.
+### Student Workflow
+1. **Login**: Enter username and password
+2. **Dashboard**: Access main features from the dashboard
+3. **Activities**: Browse, subscribe to, and manage activities
+4. **Expenses**: Add shared expenses and track debts
+5. **Feedback**: Rate activities you've participated in
 
-Tools:
--Java (with the libraries needed: JDBC, Interface)
--libraries: -all the utils
-            -Swing for the interface
-            -JDBC for the database connection
--Mysql server (Probably phpmyadmin)
+### Navigation
+- **Back to Main**: All windows have a "Back to Main" button
+- **Refresh**: Most lists have refresh functionality
+- **Search**: Use search boxes to filter students/activities
+- **Help**: Tooltips and error messages provide guidance
 
-## Class Structure
+## 🏗️ Program Structure
 
-1. **Student Class**
-   - Stores the student's personal data (name, surname, age, special needs).
-   - Contains the selected activities.
-   - Keeps track of expenses incurred and the fees to be divided.
-   - Contains how much the student has to reimburse or receive.
+### Core Architecture
 
-2. **Activity Class**
-   - Represents an activity available during the trip.
-   - Contains name, description, duration, location, time, maximum number of participants, and students registered.
-   - Manages registration and checks availability of places.
+```
+PythonExpenseApp/
+├── main.py                 # Application entry point and main dashboard
+├── db_connection.py        # Database connectivity and query execution
+├── student.py             # Student class and database operations
+├── activity.py            # Activity class and management
+├── expense.py             # Expense tracking and debt calculation
+├── feedback.py            # Feedback system with validation
+├── statistics.py          # Analytics and sentiment analysis
+├── daily_program.py       # Schedule management
+└── gui/                   # User interface components
+    ├── login_gui.py       # Login and authentication
+    ├── expense_gui.py     # Expense management interface
+    ├── activity_form_gui.py # Activity subscription interface
+    └── activity_details_gui.py # Detailed activity information
+```
 
-3. **Group Class**
-   - Represents a group of students.
-   - Keeps track of members and training criteria (e.g., common activity, dietary needs).
+### Class Hierarchy and Relationships
 
-4. **Daily Program Class/List**
-   - Represents the calendar of activities for a single day.
-   - Map of days/activities/participants.
+#### 1. **Student Class** (`student.py`)
+```python
+class Student:
+    # Core attributes
+    - id, name, surname, age, username, class_
+    - selected_activities[], total_expenses, fee_share, balance
+    
+    # Key methods
+    + authenticate(username, password)        # Static login method
+    + get_participated_activities()           # Activities student joined
+    + has_participated_in_activity(id)       # Participation check
+    + can_leave_feedback_for_activity(id)    # Feedback eligibility
+    + save_to_database() / update_in_database()
+```
 
-5. **Travel Class**
-   - Main Coordinator: contains the list of students, activities, groups, and daily program.
-   - Manages group assignment logic and program creation.
+#### 2. **Activity Class** (`activity.py`)
+```python
+class Activity:
+    # Core attributes
+    - id, name, day, start, finish, location
+    - maxpart, duration, description
+    - participants[], activity_feedback[]
+    
+    # Key methods
+    + get_current_participants()              # Live participant count
+    + get_participant_list()                  # List of enrolled students
+    + can_student_leave_feedback(student_id)  # Feedback validation
+    + get_feedback_statistics()               # Participation vs feedback
+    + get_sentiment_words() / get_sentiment_summary()
+```
 
-6. **Expense Class**
-   - Represents an expense made during the trip.
-   - Stores who paid, the total amount, and the participants who must divide the expense.
+#### 3. **Expense Class** (`expense.py`)
+```python
+class Expense:
+    # Core attributes
+    - id, amount, description, date
+    - id_giver, id_receiver, id_activity
+    
+    # Key methods
+    + calculate_split(participants)           # Equal/custom splitting
+    + create_debt_records()                   # Generate debt entries
+    + save_to_database()
+```
 
-7. **ExpenseManager Class**
-   - Manages all registered expenses.
-   - Calculates how much each student must receive or reimburse.
+#### 4. **Feedback Class** (`feedback.py`)
+```python
+class Feedback:
+    # Core attributes
+    - id, student_id, activity_id
+    - rating (1-5), comment, created_at
+    
+    # Key methods
+    + can_student_leave_feedback(s_id, a_id) # Static validation
+    + validate_before_save()                  # Participation check
+    + save_to_database()                      # With validation
+    + get_feedback_sentiment_analysis(a_id)  # Analytics
+```
 
-8. **Feedback Class**
-   - Allows a student to leave a rating on an activity (from 1 to 5 stars) and a comment.
+#### 5. **Statistics Class** (`statistics.py`)
+```python
+class Statistics:
+    # Analytics capabilities
+    + fetch_statistics_from_database()       # Comprehensive stats
+    + extract_and_analyze_sentiment_words()  # NLP processing
+    + get_sentiment_words_for_activity()     # Word frequency
+    + get_activity_sentiment_summary()       # Positive/negative/neutral
+```
 
-9. **FeedbackService Class**
-   - Manages feedback registration and provides methods to analyze feedback data (e.g., average ratings, flagged comments).
+### GUI Architecture
 
-10. **Statistics Class**
-    - Analyzes feedback data to calculate statistics such as average ratings, most appreciated activities, and trends in feedback.
-    - Identifies potential issues by highlighting negative feedback or critical comments.
-    - Works in conjunction with the Feedback Class to process and summarize feedback data.
+#### 1. **Main Dashboard** (`main.py`)
+- **Purpose**: Central navigation hub
+- **Features**: Quick actions, today's schedule, user info
+- **Navigation**: Launches Expense GUI and Activity GUI
 
-11. **UserInterface Class**
-    - Manages interaction with the user (menu, input, output).
-    - It can be textual or graphical.
-    - Divided into sections for students and teachers.
+#### 2. **Login System** (`gui/login_gui.py`)
+- **Purpose**: Secure authentication
+- **Features**: Username/password validation, error handling
+- **Security**: Password verification against database
 
-12. **DataManager Class**
-    - Deals with saving and loading data from files or databases.
-    - Manages exports of trip summaries.
+#### 3. **Expense Management** (`gui/expense_gui.py`)
+- **Purpose**: Comprehensive expense tracking
+- **Features**: 
+  - Multi-participant expense creation
+  - Debt tracking and visualization
+  - Search and filter capabilities
+  - Real-time debt calculations
 
-### Main relationships
+#### 4. **Activity Management** (`gui/activity_form_gui.py`)
+- **Purpose**: Activity browsing and subscription
+- **Features**:
+  - Activity list with availability status
+  - Subscription management
+  - Schedule conflict detection
+  - Activity details integration
 
-- Student objects participate in many Activities.
-- Students are grouped into Groups.
-- Trip manages all coordination between Student, Activity, Group, Expense, DailyProgram, and Feedback.
-- Feedback is linked to Activities.
-- ExpenseManager and Statistics work on the Expense and Feedback collections.
+#### 5. **Activity Details** (`gui/activity_details_gui.py`)
+- **Purpose**: Comprehensive activity information
+- **Features**:
+  - Participant lists and statistics
+  - Feedback collection (with validation)
+  - Sentiment analysis visualization
+  - Rating distributions
 
-### Ideas
+### Database Integration
 
-- Login page (with passwords and usernames)
-- Online website (maybe hosted on a VPS?)
+#### Connection Management (`db_connection.py`)
+```python
+class DbConnection:
+    + connect()                               # Establish connection
+    + execute_query(query, params, fetch_*)   # Safe query execution
+    + close_connection()                      # Resource cleanup
+```
+
+#### Key Database Operations
+- **Parameterized Queries**: Prevents SQL injection
+- **Transaction Support**: Ensures data consistency
+- **Error Handling**: Comprehensive exception management
+- **Connection Pooling**: Efficient resource usage
+
+### Data Flow and Relationships
+
+```
+User Login → Student Authentication → Main Dashboard
+    ↓
+Dashboard → [Expense GUI | Activity GUI]
+    ↓
+Expense GUI → Student Selection → Expense Creation → Debt Calculation
+Activity GUI → Activity List → Subscription → Feedback (if participated)
+    ↓
+All Operations → Database Updates → Statistics Refresh → UI Updates
+```
+
+### Security and Validation
+
+#### Input Validation
+- **SQL Injection Prevention**: Parameterized queries only
+- **Data Type Validation**: Amount, rating, date validation
+- **Business Logic Validation**: Participation requirements for feedback
+
+#### Business Rules
+1. **Activity Subscription**: 
+   - No time conflicts allowed
+   - Capacity limits enforced
+   - No duplicate subscriptions
+
+2. **Feedback System**:
+   - Only participants can leave feedback
+   - One feedback per student per activity
+   - Rating must be 1-5 stars
+
+3. **Expense Management**:
+   - Positive amounts only
+   - Valid participant selection required
+   - Equal split calculations
+
+### Advanced Features
+
+#### Sentiment Analysis Pipeline
+1. **Text Processing**: Extract meaningful words from comments
+2. **Sentiment Classification**: Positive/negative/neutral categorization
+3. **Frequency Analysis**: Most common sentiment words
+4. **Statistical Aggregation**: Overall sentiment scores per activity
+
+#### Real-time Updates
+- **Live Participant Counts**: Activity capacity tracking
+- **Dynamic Debt Calculations**: Real-time debt updates
+- **Automatic Statistics**: Sentiment analysis triggers
+
+## 🗃️ Database Schema
+
+### Core Tables
+- `students`: User accounts and profiles
+- `activities`: Trip activities and schedules
+- `student_activities`: Enrollment relationships
+- `expenses`: Financial transactions
+- `debts`: Individual debt records
+- `feedback`: Student ratings and comments
+
+### Analytics Tables
+- `activity_ratings`: Aggregated rating statistics
+- `sentiment_words`: Processed sentiment analysis data
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### Database Connection Errors
+```
+Error: Can't connect to MySQL server
+Solution: 
+1. Verify MySQL service is running
+2. Check credentials in db_connection.py
+3. Ensure database 'trip_manager' exists
+```
+
+#### Import Errors
+```
+Error: ModuleNotFoundError: No module named 'PythonExpenseApp'
+Solution: 
+1. Run from project root directory
+2. Use: python -m PythonExpenseApp.main
+3. Check virtual environment activation
+```
+
+#### GUI Display Issues
+```
+Error: tkinter module not found
+Solution: 
+1. Reinstall Python with tkinter
+2. On Linux: sudo apt-get install python3-tk
+3. On macOS: Use Python from python.org
+```
+
+### Performance Optimization
+- **Database Indexing**: Ensure proper indexes on foreign keys
+- **Connection Pooling**: Reuse database connections
+- **Lazy Loading**: Load data only when needed
+
+## 🤝 Contributing
+
+### Development Setup
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature-name`
+3. Make changes and test thoroughly
+4. Submit pull request with detailed description
+
+### Code Style
+- Follow PEP 8 for Python code
+- Use descriptive variable and method names
+- Add docstrings to all classes and methods
+- Include error handling for all database operations
+
+### Testing
+- Test all GUI components thoroughly
+- Verify database operations work correctly
+- Check edge cases and error conditions
+- Test with different user scenarios
+
+---
+
+**For additional support or questions, please refer to the code comments or create an issue in the repository.**

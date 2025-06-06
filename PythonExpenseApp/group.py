@@ -2,9 +2,10 @@ from PythonExpenseApp.db_connection import DbConnection
 import mysql.connector
 
 class Group:
-    def __init__(self, common_activity, dietary_needs):
+    def __init__(self, name, common_activity, dietary_needs):
         self.id = None
-        self.members = []
+        self.name = name # Added name attribute
+        self.members = [] # This will store Student objects if loaded, or IDs/names
         self.common_activity = common_activity
         self.dietary_needs = dietary_needs
         self.created_at = None
@@ -33,22 +34,10 @@ class Group:
 
     def save_to_database(self):
         """Save group to database using enhanced connection"""
-        # First, create the groups table if it doesn't exist
-        create_table_query = """
-            CREATE TABLE IF NOT EXISTS groups (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                common_activity VARCHAR(200),
-                dietary_needs TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """
+        # Table creation is handled by DbConnection.create_tables_if_not_exist() or a setup script.
         
-        # Create table first
-        DbConnection.execute_query(create_table_query)
-        
-        # Insert group
-        query = "INSERT INTO groups (common_activity, dietary_needs) VALUES (%s, %s)"
-        params = (self.common_activity, self.dietary_needs)
+        query = "INSERT INTO groups (name, common_activity, dietary_needs) VALUES (%s, %s, %s)"
+        params = (self.name, self.common_activity, self.dietary_needs)
         
         success, result = DbConnection.execute_query(query, params)
         if success:
@@ -65,23 +54,10 @@ class Group:
             print("Error: Group must be saved to database first")
             return False
             
-        # Create group_members table if it doesn't exist
-        create_table_query = """
-            CREATE TABLE IF NOT EXISTS group_members (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                group_id INT NOT NULL,
-                student_id INT NOT NULL,
-                joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
-                FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
-                UNIQUE KEY unique_group_member (group_id, student_id)
-            )
-        """
+        # Table creation is handled by DbConnection.create_tables_if_not_exist() or a setup script.
+        # Using 'student_groups' table name to match schema.
         
-        DbConnection.execute_query(create_table_query)
-        
-        # Add member
-        query = "INSERT INTO group_members (group_id, student_id) VALUES (%s, %s)"
+        query = "INSERT INTO student_groups (group_id, student_id) VALUES (%s, %s)"
         params = (self.id, student_id)
         
         success, result = DbConnection.execute_query(query, params)
@@ -95,7 +71,7 @@ class Group:
     @staticmethod
     def get_all_groups():
         """Get all groups from database"""
-        query = "SELECT id, common_activity, dietary_needs, created_at FROM groups ORDER BY created_at DESC"
+        query = "SELECT id, name, common_activity, dietary_needs, created_at FROM groups ORDER BY name"
         
         success, result = DbConnection.execute_query(query, fetch_all=True)
         if not success:
@@ -104,9 +80,9 @@ class Group:
             
         groups = []
         for row in result:
-            group = Group(row[1], row[2])
+            group = Group(row[1], row[2], row[3]) # name, common_activity, dietary_needs
             group.id = row[0]
-            group.created_at = row[3]
+            group.created_at = row[4]
             groups.append(group)
             
         return groups
@@ -116,10 +92,11 @@ class Group:
         if not self.id:
             return []
             
+        # Using 'student_groups' table name to match schema.
         query = """SELECT s.id, s.name, s.surname 
                    FROM students s
-                   JOIN group_members gm ON s.id = gm.student_id
-                   WHERE gm.group_id = %s
+                   JOIN student_groups sg ON s.id = sg.student_id
+                   WHERE sg.group_id = %s
                    ORDER BY s.surname, s.name"""
         
         success, result = DbConnection.execute_query(query, (self.id,), fetch_all=True)
@@ -128,5 +105,5 @@ class Group:
         return []
 
     def __str__(self):
-        return (f"Group [commonActivity={self.common_activity}, "
-                f"dietaryNeeds={self.dietary_needs}, members={self.members}]")
+        return (f"Group [id={self.id}, name={self.name}, commonActivity={self.common_activity}, "
+                f"dietaryNeeds={self.dietary_needs}, membersCount={len(self.members)}]")

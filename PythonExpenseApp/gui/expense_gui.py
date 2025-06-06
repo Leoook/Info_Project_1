@@ -10,7 +10,7 @@ class ExpenseGUI:
     """
     def __init__(self, root, current_student=None, main_callback=None):
         self.root = root
-        self.current_student = current_student
+        self.current_student = current_student # This object now has a .role attribute
         self.main_callback = main_callback
         self.root.title("Advanced Expense Tracker")
         self.root.geometry("1400x800")
@@ -27,10 +27,11 @@ class ExpenseGUI:
         # Create notebook for tabs
         self.notebook = ttk.Notebook(main_container)
         self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
-        # Create tabs
+          # Create tabs
         self.create_add_expense_tab()
         self.create_debt_tracker_tab()
+        
+        # Group management is now only available in the Teacher Dashboard
         
         # Status bar
         self.status_frame = tk.Frame(main_container, bg='#e5e7eb', height=30)
@@ -80,31 +81,56 @@ class ExpenseGUI:
         
         # Header
         header_frame = tk.Frame(add_expense_frame, bg='#ffffff', height=60)
-        header_frame.pack(fill=tk.X, padx=20, pady=(20, 10))
+        header_frame.pack(fill=tk.X, padx=20, pady=(20, 10), side=tk.TOP)
         header_frame.pack_propagate(False)
         
         title_label = tk.Label(header_frame, text="💰 Add New Expense", 
                               font=("Segoe UI", 24, "bold"), bg="#ffffff", fg="#1e293b")
         title_label.pack(anchor='w')
         
-        # Main content with three columns
-        content_frame = tk.Frame(add_expense_frame, bg='#ffffff')
-        content_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+        # Create a container for the canvas and scrollbars
+        canvas_container = tk.Frame(add_expense_frame, bg='#ffffff')
+        canvas_container.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+
+        # Create Canvas
+        canvas = tk.Canvas(canvas_container, bg='#ffffff', highlightthickness=0)
         
-        # Configure grid
-        content_frame.grid_columnconfigure(0, weight=1)
-        content_frame.grid_columnconfigure(1, weight=1)
-        content_frame.grid_columnconfigure(2, weight=1)
-        content_frame.grid_rowconfigure(0, weight=1)
+        # Create Vertical Scrollbar
+        v_scrollbar = ttk.Scrollbar(canvas_container, orient="vertical", command=canvas.yview)
+        v_scrollbar.pack(side=tk.RIGHT, fill="y")
+        
+        # Create Horizontal Scrollbar
+        h_scrollbar = ttk.Scrollbar(canvas_container, orient="horizontal", command=canvas.xview)
+        h_scrollbar.pack(side=tk.BOTTOM, fill="x")
+        
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        canvas.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
+        
+        # This frame will contain the actual content and be placed inside the canvas
+        scrollable_inner_frame = tk.Frame(canvas, bg='#ffffff')
+        
+        canvas.create_window((0, 0), window=scrollable_inner_frame, anchor="nw")
+        
+        # Update scrollregion when an event Configure occurs
+        scrollable_inner_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+
+        # Main content with three columns - now using scrollable_inner_frame
+        # The 'content_frame' variable is now 'scrollable_inner_frame'
+        
+        # Configure grid on the scrollable_inner_frame
+        scrollable_inner_frame.grid_columnconfigure(0, weight=1, minsize=400) # Min size for better layout
+        scrollable_inner_frame.grid_columnconfigure(1, weight=1, minsize=400)
+        scrollable_inner_frame.grid_columnconfigure(2, weight=1, minsize=400)
+        scrollable_inner_frame.grid_rowconfigure(0, weight=1) # Allow vertical expansion of sections
         
         # Payer selection section
-        self.create_payer_section(content_frame)
+        self.create_payer_section(scrollable_inner_frame)
         
         # Participants selection section
-        self.create_participants_section(content_frame)
+        self.create_participants_section(scrollable_inner_frame)
         
         # Expense details section
-        self.create_expense_details_section(content_frame)
+        self.create_expense_details_section(scrollable_inner_frame)
 
     def create_payer_section(self, parent):
         """Create the payer selection section"""
@@ -550,7 +576,6 @@ class ExpenseGUI:
         connection = DbConnection.connect()
         if not connection:
             return
-            
         try:
             cursor = connection.cursor()
             
@@ -628,8 +653,10 @@ class ExpenseGUI:
                 if total_you_owe > 0:
                     self.you_owe_listbox.insert(tk.END, "")
                     self.you_owe_listbox.insert(tk.END, f"TOTAL YOU OWE: €{total_you_owe:.2f}")
-                
-        except Exception as e:
-            self.status_label.config(text=f"Error loading debts: {e}")
+        except Exception as err:
+            self.status_label.config(text=f"Error loading debts: {err}")
         finally:
             connection.close()
+
+# End of ExpenseGUI class
+# All group management code has been removed. Teachers use the Teacher Dashboard for these features.

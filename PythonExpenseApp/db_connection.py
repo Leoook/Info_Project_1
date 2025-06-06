@@ -209,14 +209,14 @@ class DbConnection:
     @classmethod
     def create_tables_if_not_exist(cls):
         """Create necessary tables if they don't exist"""
-        tables = {
-            'students': """
+        tables = {            'students': """
                 CREATE TABLE IF NOT EXISTS students (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     name VARCHAR(100) NOT NULL,
                     surname VARCHAR(100) NOT NULL,
-                    username VARCHAR(50) UNIQUE NOT NULL,
+                    email VARCHAR(100) UNIQUE NOT NULL,
                     password VARCHAR(255) NOT NULL,
+                    role VARCHAR(20) DEFAULT 'student',
                     class VARCHAR(20),
                     age INT,
                     special_needs TEXT,
@@ -294,7 +294,28 @@ class DbConnection:
                     comment TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
-                    FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE
+                    FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE,
+                    UNIQUE KEY unique_student_feedback (student_id, activity_id)
+                )
+            """,
+            'groups': """
+                CREATE TABLE IF NOT EXISTS groups (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL,
+                    common_activity VARCHAR(200),
+                    dietary_needs TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """,
+            'student_groups': """
+                CREATE TABLE IF NOT EXISTS student_groups (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    group_id INT NOT NULL,
+                    student_id INT NOT NULL,
+                    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
+                    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+                    UNIQUE KEY unique_student_group (student_id, group_id)
                 )
             """
         }

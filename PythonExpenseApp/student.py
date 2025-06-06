@@ -1,4 +1,4 @@
-from PythonExpenseApp.db_connection import DbConnection
+from db_connection import DbConnection
 
 class Student:
     # Student class represents a student with personal data, activities, and financial info
@@ -187,24 +187,23 @@ class Student:
         student.fee_share = float(result[8]) if result[8] else 0.0
         student.balance = float(result[9]) if result[9] else 0.0
         
-        return student
-
-    @staticmethod
-    def authenticate(username, password):
+        return student    @staticmethod
+    def authenticate(email, password):
         """
-        Authenticate a student login
+        Authenticate a student login using email and password
         """
-        query = """SELECT id, name, surname, username, class, age, special_needs 
-                   FROM students WHERE username=%s AND password=%s"""
+        query = """SELECT id, name, surname, email, class, age, special_needs, role 
+                   FROM students WHERE email=%s AND password=%s"""
         
-        success, result = DbConnection.execute_query(query, (username, password), fetch_one=True)
+        success, result = DbConnection.execute_query(query, (email, password), fetch_one=True)
         if not success or not result:
             return None
             
         student = Student(result[1], result[2], result[5], result[6])
         student.id = result[0]
-        student.username = result[3]
+        student.email = result[3]
         student.class_ = result[4]
+        student.role = result[7] if len(result) > 7 else 'student'
         
         return student
 

@@ -1,17 +1,19 @@
 import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk, ImageDraw, ImageFilter
-from PythonExpenseApp.db_connection import DbConnection
-from PythonExpenseApp.gui.expense_gui import ExpenseGUI
-from PythonExpenseApp.gui.activity_form_gui import ActivityFormGUI
+from db_connection import DbConnection
+from gui.expense_gui import ExpenseGUI
+from gui.activity_form_gui import ActivityFormGUI
+from gui.teacher_dashboard import TeacherDashboard
 import datetime
+import sys
 
 class DashboardGUI:
-    def __init__(self, root, student, show_expense_gui_callback, show_activity_form_callback):
+    def __init__(self, root, student, expense_callback, activity_callback):
         self.root = root
-        self.student = student
-        self.show_expense_gui_callback = show_expense_gui_callback
-        self.show_activity_form_callback = show_activity_form_callback
+        self.student = student  # This student object now contains the role
+        self.expense_callback = expense_callback
+        self.activity_callback = activity_callback
         self.logged_in_student = student # Keep a reference if needed by other methods
 
         self.root.title("Trip Manager Dashboard")
@@ -47,6 +49,18 @@ class DashboardGUI:
         subtitle_label = tk.Label(header_frame, text="Manage your expenses and activities efficiently",
                                  font=("Segoe UI", 16), bg="#ffffff", fg="#64748b")
         subtitle_label.pack(anchor='w', pady=(5, 0))
+
+        # Welcome message including role
+        welcome_text = f"Welcome, {self.student.name} {getattr(self.student, 'surname', '')}!"
+        role_text = f"Role: {getattr(self.student, 'role', 'N/A').capitalize()}"
+        
+        welcome_label = tk.Label(header_frame, text=welcome_text, 
+                                font=("Segoe UI", 20, "bold"), bg="#ffffff", fg="#1e293b")
+        welcome_label.pack(pady=(10, 0))
+
+        role_label = tk.Label(header_frame, text=role_text,
+                              font=("Segoe UI", 12), bg="#ffffff", fg="#64748b")
+        role_label.pack(pady=(0,10))
 
         # Content area with grid layout
         content_frame = tk.Frame(main_container, bg='#ffffff')
@@ -125,11 +139,20 @@ class DashboardGUI:
     def _create_action_buttons(self, actions_frame):
         self._create_action_button(actions_frame, "Expense Tracker", "💰",
                                 "Track and manage all trip expenses",
-                                lambda: [self.root.destroy(), self.show_expense_gui_callback()], "#3b82f6")
+                                lambda: [self.root.destroy(), self.expense_callback()], "#3b82f6")
 
         self._create_action_button(actions_frame, "Activity Manager", "🎯",
                                 "Subscribe to activities and manage schedule",
-                                lambda: [self.root.destroy(), self.show_activity_form_callback()], "#059669")
+                                lambda: [self.root.destroy(), self.activity_callback()], "#059669")
+
+        # Example: Conditionally add a button for teachers
+        if hasattr(self.student, 'role') and self.student.role == 'teacher':
+            admin_button = tk.Button(actions_frame, text="Teacher Admin Panel",
+                                     font=("Segoe UI", 14, "bold"), bg="#8b5cf6", fg="white",
+                                     relief='flat', bd=0, activebackground="#7c3aed",
+                                     cursor="hand2", command=self.open_teacher_admin_panel,
+                                     width=20, height=2)
+            admin_button.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
 
     def _create_schedule_section(self, schedule_frame):
         # Schedule listbox
@@ -167,6 +190,29 @@ class DashboardGUI:
         else:
             schedule_list.insert(tk.END, "❌ Could not load schedule")
 
+    def open_expense_gui(self):
+        # This method can be expanded to handle different roles if needed
+        self.root.destroy()  # Close dashboard
+        self.expense_callback() # This would open ExpenseGUI
+
+    def open_activity_form(self):
+        self.root.destroy()  # Close dashboard
+        self.activity_callback() # This would open ActivityFormGUI    def open_teacher_admin_panel(self):
+        """Open the comprehensive teacher dashboard"""
+        self.root.destroy()  # Close current dashboard
+        
+        # Create a new root window for the teacher dashboard
+        teacher_root = tk.Tk()
+        teacher_dashboard = TeacherDashboard(teacher_root, self.student, self.show_main_dashboard)
+        teacher_root.mainloop()
+        
+    def show_main_dashboard(self):
+        """Callback to show main dashboard again"""
+        # Create new root and dashboard
+        new_root = tk.Tk()
+        dashboard = DashboardGUI(new_root, self.student, self.expense_callback, self.activity_callback)
+        new_root.mainloop()
+
 if __name__ == '__main__':
     # This is for testing the DashboardGUI directly
     # You'll need to mock or provide a student object and callback functions
@@ -193,6 +239,7 @@ if __name__ == '__main__':
         sys.exit(1) # Make sure to import sys if you use sys.exit
 
     test_student = MockStudent("Test User", "6A")
+    test_student.role = "teacher"  # For testing teacher-specific features
     main_root = tk.Tk()
     app = DashboardGUI(main_root, test_student, mock_show_expense, mock_show_activity)
     main_root.mainloop()

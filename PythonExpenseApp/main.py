@@ -7,11 +7,12 @@ if _project_root_directory not in sys.path:
 
 import tkinter as tk
 from tkinter import messagebox
-from PythonExpenseApp.gui.expense_gui import ExpenseGUI
-from PythonExpenseApp.gui.activity_form_gui import ActivityFormGUI
-from PythonExpenseApp.gui.login_gui import LoginGUI
-from PythonExpenseApp.gui.dashboard_gui import DashboardGUI
-from PythonExpenseApp.db_connection import DbConnection
+from gui.expense_gui import ExpenseGUI
+from gui.activity_form_gui import ActivityFormGUI
+from gui.login_gui import LoginGUI
+from gui.dashboard_gui import DashboardGUI
+from gui.teacher_dashboard import TeacherDashboard
+from db_connection import DbConnection
 
 # Global variable to store the logged-in student
 logged_in_student = None
@@ -48,11 +49,17 @@ def on_login_success(student):
     global logged_in_student
     logged_in_student = student
 
-    # Main menu window - Now handled by DashboardGUI
-    root = tk.Tk()
-    # Pass the callbacks for showing other GUIs
-    dashboard = DashboardGUI(root, student, show_expense_gui, show_activity_form)
-    root.mainloop()
+    # Check if user is a teacher and redirect to teacher dashboard
+    if hasattr(student, 'role') and student.role == 'teacher':
+        root = tk.Tk()
+        teacher_dashboard = TeacherDashboard(root, student, show_main_dashboard)
+        root.mainloop()
+    else:
+        # Regular student dashboard
+        root = tk.Tk()
+        # Pass the callbacks for showing other GUIs
+        dashboard = DashboardGUI(root, student, show_expense_gui, show_activity_form)
+        root.mainloop()
 
 # Main entry point for the application
 if __name__ == "__main__":
@@ -68,3 +75,7 @@ if __name__ == "__main__":
     root = tk.Tk()
     login = LoginGUI(root, on_login_success)
     root.mainloop()
+
+# No changes needed in this file based on the current request,
+# as the student object passed around will implicitly carry the role.
+# The logic for handling the role is within the individual GUI classes.

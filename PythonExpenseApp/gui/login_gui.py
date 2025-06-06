@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
-from PythonExpenseApp.db_connection import DbConnection
-from PythonExpenseApp.student import Student
+from db_connection import DbConnection
+from student import Student  # Assuming Student class can hold role
 
 
 class LoginGUI:
@@ -77,8 +77,7 @@ class LoginGUI:
         
         # Bind Enter key to login
         self.root.bind('<Return>', lambda e: self.login())
-        
-        # Focus on username field
+          # Focus on username field
         self.username_entry.focus()
 
     def login(self):
@@ -93,24 +92,30 @@ class LoginGUI:
         if connection:
             try:
                 cursor = connection.cursor()
-                sql = "SELECT id, name, surname, class, age, special_needs FROM students WHERE username=%s AND password=%s"
-                cursor.execute(sql, (username, password))
+                # Use plain text password comparison
+                query = "SELECT id, name, surname, email, password, special_needs, role FROM students WHERE email = %s"
+                cursor.execute(query, (username,))
                 result = cursor.fetchone()
-                
+                connection.close()
+
                 if result:
-                    student = Student(result[1], result[2], result[4], result[5])
-                    student.id = result[0]
-                    student.class_ = result[3]
-                    connection.close()
-                    self.root.destroy()
-                    self.on_login_success(student)
+                    user_id, name, surname, email, stored_password, special_needs, role = result
+                    if stored_password == password:  # Plain text password comparison
+                        # Create a Student object that includes the role
+                        current_user = Student(name, surname, 0, special_needs)  # age=0 placeholder
+                        current_user.id = user_id
+                        current_user.email = email
+                        setattr(current_user, 'role', role)  # Add role attribute dynamically
+
+                        messagebox.showinfo("Login Successful", f"Welcome {name} {surname} ({role})!", parent=self.root)
+                        self.root.destroy()
+                        if self.on_login_success:
+                            self.on_login_success(current_user)
+                    else:
+                        messagebox.showerror("Login Failed", "Invalid username or password.", parent=self.root)
                 else:
-                    self.feedback_label.config(text="Invalid username or password.")
-                    # Clear password field for security
-                    self.password_entry.delete(0, tk.END)
-                connection.close()
+                    messagebox.showerror("Login Failed", "Invalid username or password.", parent=self.root)
             except Exception as e:
-                self.feedback_label.config(text=f"Database error: {e}")
-                connection.close()
+                messagebox.showerror("Login Error", f"An error occurred: {e}", parent=self.root)
         else:
-            self.feedback_label.config(text="Could not connect to the database.")
+            messagebox.showerror("Database Error", "Could not connect to the database.", parent=self.root)

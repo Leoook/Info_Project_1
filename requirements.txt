@@ -1,0 +1,8 @@
+tk
+pymysql
+Pillow
+# If you use mysql-connector-python instead of pymysql, uncomment the next line:
+# mysql-connector-python
+# If you use sqlite3, it is included in Python standard library (no need to add).
+# Add any other dependencies below as needed:
+# requests

@@ -21,60 +21,36 @@ import calendar  # For calendar-related functions (though not explicitly used in
 class DailyProgram:
     """
     Manages daily activity schedules and handles conflict detection.
-    
-    This class provides functionality for managing the daily schedule
-    of activities during a trip, ensuring no conflicts occur and that
-    students can participate in their selected activities without
-    time overlap issues.
-    
+
     ATTRIBUTES:
         date (date): The specific date this program instance represents.
-                     This determines which activities are loaded and managed.
-        activities (list): A list of Activity objects scheduled for this program's date.
-                           Loaded from the database during initialization.
-        conflicts (dict): A dictionary to track scheduling conflicts. 
-                          Key: student_id, Value: list of conflicting activity groups.
-                          Populated by conflict detection methods.
-        time_slots (dict): A dictionary mapping each hour of the day (integer 0-23)
-                           to a list of Activity objects scheduled during that hour.
-                           Used for efficient conflict detection.
-        student_schedules (dict): A dictionary to cache student schedules for the day.
-                                  Key: student_id, Value: list of Activity objects.
-    
+        activities (list): List of Activity objects scheduled for this date.
+        conflicts (dict): Tracks scheduling conflicts for students.
+        time_slots (dict): Maps each hour of the day (0-23) to a list of Activity objects.
+        student_schedules (dict): Caches student schedules for the day.
+
     USAGE:
-        # Create daily program for a specific date
-        program = DailyProgram("2024-03-15") # Date string in YYYY-MM-DD format
-        
-        # Check for conflicts for a specific student
+        program = DailyProgram("2024-03-15")
         student_conflicts = program.detect_student_conflicts(student_id=1)
-        
-        # Get a formatted schedule for display
         schedule_display_text = program.get_formatted_schedule(format_type="detailed")
     """
 
     def __init__(self, program_date=None):
         """
         Initialize a DailyProgram for a specific date.
-        
-        Creates a new daily program manager for the specified date.
-        If no date is provided, it defaults to the current system date.
-        
-        PARAMETERS:
-            program_date (str/date, optional): The date for this program.
-                                               Can be a string in "YYYY-MM-DD" format
-                                               or a Python `date` object.
-                                               Defaults to `date.today()`.
-            
-        INITIALIZATION PROCESS:
-            1. Parses and validates the provided `program_date`.
-            2. Initializes internal data structures: `activities`, `conflicts`, 
-               `time_slots`, and `student_schedules`.
-            3. Calls `load_activities_for_date()` to fetch relevant activities
-               from the database.
-            4. Calls `build_time_slot_mapping()` to organize activities by hour
-               for efficient conflict checking.
-               
-        RAISES:
+
+        :param program_date: str or date, optional. The date for this program.
+                             Can be a string in "YYYY-MM-DD" format or a Python `date` object.
+                             Defaults to `date.today()` if not provided.
+
+        Initializes:
+            - self.date: The date for which the schedule is managed.
+            - self.activities: List of Activity objects for the date.
+            - self.conflicts: Dict for student_id -> list of conflicting activities.
+            - self.time_slots: Dict for hour -> list of activities at that hour.
+            - self.student_schedules: Dict for student_id -> list of their activities for the day.
+
+        Raises:
             ValueError: If `program_date` string is not in "YYYY-MM-DD" format.
             TypeError: If `program_date` is not a string, `date` object, or None.
         """
@@ -109,28 +85,11 @@ class DailyProgram:
     def load_activities_for_date(self):
         """
         Load all activities scheduled for the program's date from the database.
-        
-        This method queries the `activities` table to retrieve all activity records
-        that are scheduled for the date stored in `self.date`. The retrieved
-        activities are then converted into `Activity` objects and stored in
-        `self.activities`.
-        
-        DATABASE QUERY:
-            SELECT id, name, day, start_time, finish_time, location, 
-                   max_participants, duration, description
-            FROM activities 
-            WHERE day = %s  -- %s is replaced with self.date
-            ORDER BY start_time, name -- Ensures activities are somewhat ordered
-            
-        SIDE EFFECTS:
-            - Populates `self.activities` with a list of `Activity` objects.
-            - Prints status messages to the console regarding loading success or failure.
-            
-        ERROR HANDLING:
-            - If the database query fails, `self.activities` remains empty, and an
-              error message is printed.
-            - If no activities are found for the date, `self.activities` remains empty,
-              and a message is printed.
+
+        - Queries the `activities` table for all activities on self.date.
+        - Converts each row into an Activity object and stores in self.activities.
+        - Prints status messages on success or failure.
+        - If no activities found, self.activities is empty.
         """
         # Import Activity class locally to avoid circular dependencies at module level
         from PythonExpenseApp.activity import Activity
@@ -179,23 +138,10 @@ class DailyProgram:
     def build_time_slot_mapping(self):
         """
         Build a mapping of time slots (hours) to activities for efficient conflict detection.
-        
-        This method iterates through all loaded activities (`self.activities`)
-        and populates `self.time_slots`. `self.time_slots` is a dictionary where
-        keys are hours of the day (0-23), and values are lists of `Activity`
-        objects scheduled during that hour.
-        
-        TIME SLOT LOGIC:
-            - An activity occupies all integer hour slots from its `start_time`
-              up to (but not including) its `finish_time`.
-            - Example: An activity from 9:00 (start_time=9) to 12:00 (finish_time=12)
-              will occupy time slots 9, 10, and 11.
-            - This representation allows checking if an hour is busy by looking up
-              the hour in `self.time_slots`.
-        
-        SIDE EFFECTS:
-            - Populates `self.time_slots` dictionary.
-            - Prints a status message to the console.
+
+        - Iterates through all loaded activities and populates self.time_slots.
+        - Each hour (0-23) maps to a list of activities scheduled during that hour.
+        - Used for fast conflict detection and slot availability checks.
         """
         # Initialize or clear the time_slots dictionary
         self.time_slots = {}
@@ -222,35 +168,13 @@ class DailyProgram:
     def detect_student_conflicts(self, student_id):
         """
         Detect scheduling conflicts for a specific student on the program's date.
-        
-        This method checks if a student has enrolled in multiple activities
-        that have overlapping time slots on `self.date`.
-        
-        PARAMETERS:
-            student_id (int): The database ID of the student whose schedule is to be checked.
-            
-        RETURNS:
-            list: A list of conflict groups. Each conflict group is a list of
-                  `Activity` objects that conflict with each other.
-                  Returns an empty list if there are no conflicts or the student
-                  has 0 or 1 activity.
-                  
-        CONFLICT DETECTION ALGORITHM:
-            1. Retrieves all activities the student is enrolled in for `self.date`
-               using `get_student_activities_for_date()`.
-            2. If the student has fewer than two activities, no conflicts are possible.
-            3. Iterates through all unique pairs of the student's activities.
-            4. For each pair, calls `activities_overlap()` to check for time conflicts.
-            5. Groups all mutually conflicting activities together.
-            6. Returns a list of these conflict groups.
-            
-        USAGE:
-            conflicts = program.detect_student_conflicts(student_id=5)
-            if conflicts:
-                print(f"Student ID {5} has scheduling conflicts:")
-                for group_idx, conflict_group in enumerate(conflicts):
-                    activity_names = [act.name for act in conflict_group]
-                    print(f"  Conflict Group {group_idx + 1}: {', '.join(activity_names)}")
+
+        :param student_id: int. The database ID of the student.
+        :return: list. Each element is a list of Activity objects that conflict with each other.
+
+        - Retrieves all activities the student is enrolled in for self.date.
+        - Checks all pairs for time overlaps.
+        - Returns a list of conflict groups (each group is a list of conflicting activities).
         """
         # Get all activities the student is enrolled in for this specific date
         student_activities = self.get_student_activities_for_date(student_id)
@@ -300,29 +224,12 @@ class DailyProgram:
     def activities_overlap(self, activity1, activity2):
         """
         Check if two activities have overlapping time slots.
-        
-        This method determines whether the time periods of two given `Activity`
-        objects overlap.
-        
-        PARAMETERS:
-            activity1 (Activity): The first `Activity` object.
-            activity2 (Activity): The second `Activity` object.
-            
-        RETURNS:
-            bool: `True` if the activities' time slots overlap, `False` otherwise.
-            
-        OVERLAP LOGIC:
-            Two time intervals [start1, end1) and [start2, end2) overlap if:
-            `start1 < end2` AND `start2 < end1`.
-            - `start_time` is inclusive, `finish_time` is exclusive for an activity's duration.
-            - Activities are considered non-overlapping if one ends exactly when
-              the other begins (e.g., Activity A: 9-12, Activity B: 12-15).
-            
-        EXAMPLES:
-            - Activity A (9:00-12:00), Activity B (10:00-14:00) -> OVERLAP
-              (start1=9, end1=12, start2=10, end2=14. 9 < 14 AND 10 < 12 is True)
-            - Activity A (9:00-12:00), Activity B (12:00-15:00) -> NO OVERLAP
-              (start1=9, end1=12, start2=12, end2=15. 9 < 15 BUT 12 < 12 is False)
+
+        :param activity1: Activity object.
+        :param activity2: Activity object.
+        :return: bool. True if the activities' time slots overlap, False otherwise.
+
+        - Uses interval overlap logic: [start1, end1) and [start2, end2) overlap if start1 < end2 and start2 < end1.
         """
         # Get the start and finish hours for both activities
         start1, end1 = activity1.start, activity1.finish
@@ -337,31 +244,12 @@ class DailyProgram:
     def get_student_activities_for_date(self, student_id):
         """
         Get all activities a student is enrolled in for this program's date.
-        
-        This method retrieves from the database all `Activity` objects that a
-        specific student is enrolled in and that are scheduled for `self.date`.
-        The result is cached in `self.student_schedules` for subsequent calls
-        for the same student.
-        
-        PARAMETERS:
-            student_id (int): The database ID of the student.
-            
-        RETURNS:
-            list: A list of `Activity` objects the student is enrolled in for `self.date`.
-                  Returns an empty list if the student has no activities on this date
-                  or if a database error occurs.
-            
-        DATABASE QUERY:
-            SELECT a.id, a.name, a.day, a.start_time, a.finish_time, a.location,
-                   a.max_participants, a.duration, a.description
-            FROM activities a
-            JOIN student_activities sa ON a.id = sa.activity_id
-            WHERE sa.student_id = %s AND a.day = %s
-            ORDER BY a.start_time
-            
-        CACHING:
-            Results are cached in `self.student_schedules[student_id]` to avoid
-            repeated database queries for the same student on the same `DailyProgram` instance.
+
+        :param student_id: int. The database ID of the student.
+        :return: list of Activity objects for self.date.
+
+        - Queries the database for all activities for the student on self.date.
+        - Caches results in self.student_schedules for efficiency.
         """
         # Check cache first
         if student_id in self.student_schedules:
@@ -398,29 +286,13 @@ class DailyProgram:
 
     def get_available_time_slots(self, duration_hours=1):
         """
-        Find available time slots on `self.date` that can accommodate an activity
-        of a given duration.
-        
-        This method scans the hours of the day (typically from 6 AM to 11 PM)
-        to find continuous blocks of free time that are at least `duration_hours` long.
-        
-        PARAMETERS:
-            duration_hours (int, optional): The required duration in hours for the
-                                            new activity. Defaults to 1 hour.
-            
-        RETURNS:
-            list: A list of tuples, where each tuple `(start_hour, end_hour)`
-                  represents an available time slot. `start_hour` is inclusive,
-                  `end_hour` is exclusive.
-                  Returns an empty list if no suitable slots are found.
-            
-        ALGORITHM:
-            1. Defines a reasonable scheduling window (e.g., 6:00 to 23:00).
-            2. Iterates through each possible start hour within this window.
-            3. For each potential start hour, checks if the subsequent `duration_hours`
-               are all free by consulting `self.time_slots`.
-            4. If a block of `duration_hours` is entirely free, it's added to the
-               list of available slots.
+        Find available time slots on self.date for an activity of a given duration.
+
+        :param duration_hours: int, optional. Required duration in hours. Defaults to 1.
+        :return: list of (start_hour, end_hour) tuples representing available slots.
+
+        - Scans the day for continuous blocks of free time at least duration_hours long.
+        - Returns all such available slots.
         """
         available_slots = []
         
@@ -450,22 +322,14 @@ class DailyProgram:
 
     def get_formatted_schedule(self, format_type="simple"):
         """
-        Generate a human-readable, formatted schedule display for `self.date`.
-        
-        This method creates a string representation of the day's schedule,
-        which can be used for display in a GUI, console output, or reports.
-        
-        PARAMETERS:
-            format_type (str, optional): The type of formatting to apply.
-                                         Defaults to "simple".
-                                         Supported values:
-                                         - "simple": Basic list with times and activity names.
-                                         - "detailed": Includes location, duration, and participant info.
-                                         - "timeline": Hour-by-hour view of activities.
-            
-        RETURNS:
-            str: A formatted string representing the schedule. If no activities
-                 are scheduled, a message indicating this is returned.
+        Generate a human-readable, formatted schedule display for self.date.
+
+        :param format_type: str, optional. "simple", "detailed", or "timeline".
+        :return: str. Formatted schedule.
+
+        - "simple": Basic list with times and activity names.
+        - "detailed": Includes location, duration, and participant info.
+        - "timeline": Hour-by-hour view of activities.
         """
         # If there are no activities for the day, return a simple message
         if not self.activities:
@@ -536,16 +400,10 @@ class DailyProgram:
     def get_schedule_statistics(self):
         """
         Generate statistical information about the day's schedule.
-        
-        This method analyzes the schedule for `self.date` to provide insights
-        such as the total number of activities, total scheduled hours,
-        busiest time periods, and participant engagement.
-        
-        RETURNS:
-            dict: A dictionary containing various schedule statistics.
-                  Example keys: 'total_activities', 'total_scheduled_hours',
-                  'average_duration', 'busiest_hours', 'schedule_utilization',
-                  'participant_summary'.
+
+        :return: dict. Contains keys like 'total_activities', 'total_scheduled_hours', 'average_duration', etc.
+
+        - Analyzes the schedule for insights such as total activities, scheduled hours, busiest hours, and participant summary.
         """
         # Initialize statistics dictionary with default values
         stats = {
@@ -602,34 +460,15 @@ class DailyProgram:
 
     def validate_new_activity(self, start_hour, finish_hour, max_participants=None):
         """
-        Validate if a new activity can be scheduled at the specified time on `self.date`.
-        
-        This method checks whether adding a new activity with the given time
-        parameters would create conflicts with existing activities or violate
-        any predefined business rules (e.g., minimum duration).
-        
-        PARAMETERS:
-            start_hour (int): Proposed start hour for the new activity (24-hour format, 0-23).
-            finish_hour (int): Proposed finish hour for the new activity (24-hour format, 1-24).
-                               The activity ends *before* this hour.
-            max_participants (int, optional): Maximum participants for the new activity.
-                                              Currently not used in validation logic here
-                                              but could be for resource checks.
-            
-        RETURNS:
-            tuple: `(is_valid, validation_messages)`
-                - `is_valid` (bool): `True` if the new activity can be scheduled, `False` otherwise.
-                - `validation_messages` (list): A list of strings describing any validation
-                                                issues found. Empty if `is_valid` is `True`.
-                
-        VALIDATION CHECKS:
-            1. Basic time integrity: `start_hour` must be before `finish_hour`.
-            2. Hour range: `start_hour` (0-23), `finish_hour` (1-24).
-            3. Minimum duration: Activity must be at least 1 hour long.
-            4. Time conflicts: Checks against `self.time_slots` for overlaps with
-               existing activities.
-            5. Reasonable scheduling hours: Warns if activity is outside typical
-               scheduling window (e.g., 6 AM - 11 PM), but doesn't make it invalid.
+        Validate if a new activity can be scheduled at the specified time on self.date.
+
+        :param start_hour: int. Proposed start hour (0-23).
+        :param finish_hour: int. Proposed finish hour (1-24).
+        :param max_participants: int, optional. Not used in validation here.
+        :return: tuple (is_valid, validation_messages).
+
+        - Checks for time integrity, hour range, minimum duration, and conflicts with existing activities.
+        - Returns True and empty list if valid, otherwise False and list of issues.
         """
         validation_messages = []
         is_valid = True
@@ -677,35 +516,14 @@ class DailyProgram:
 
     def export_schedule(self, file_format="txt", file_path=None):
         """
-        Export the schedule for `self.date` to a file in the specified format.
-        
-        This method generates a schedule file that can be shared or archived.
-        Supported formats are TXT, CSV, and JSON.
-        
-        PARAMETERS:
-            file_format (str, optional): The desired export format.
-                                         Supported: "txt", "csv", "json".
-                                         Defaults to "txt".
-            file_path (str, optional): The full path (including filename and extension)
-                                       where the file should be saved. If `None`,
-                                       a default filename like "schedule_YYYY-MM-DD.format"
-                                       will be created in the current working directory.
-            
-        RETURNS:
-            str: The absolute path to the created schedule file.
-                 Returns `None` or raises an error if export fails.
-            
-        FILE CONTENT:
-            - "txt": Human-readable text format, using `get_formatted_schedule("detailed")`
-                     and `get_schedule_statistics()`.
-            - "csv": Comma-Separated Values, suitable for spreadsheets. Includes columns
-                     like Date, Activity Name, Start Time, End Time, Location, etc.
-            - "json": JavaScript Object Notation, structured data including activities list
-                      and schedule statistics.
-                      
-        RAISES:
-            IOError: If file writing fails.
-            ValueError: If an unsupported `file_format` is provided.
+        Export the schedule for self.date to a file in the specified format.
+
+        :param file_format: str, optional. "txt", "csv", or "json". Defaults to "txt".
+        :param file_path: str, optional. Path to save the file. Defaults to "schedule_YYYY-MM-DD.format".
+        :return: str. Absolute path to the created file.
+
+        - Exports schedule in human-readable text, CSV, or JSON format.
+        - Raises ValueError for unsupported formats.
         """
         import json # For JSON export
         import csv  # For CSV export
@@ -800,24 +618,16 @@ class DailyProgram:
     def __str__(self):
         """
         Return a string representation of the DailyProgram instance.
-        
-        Provides a concise summary, typically used for debugging and logging.
-        
-        RETURNS:
-            str: A string in the format "DailyProgram(date=YYYY-MM-DD, activities=N)",
-                 where N is the number of activities loaded for the date.
+
+        :return: str. Format: "DailyProgram(date=YYYY-MM-DD, activities=N)".
         """
         return f"DailyProgram(date={self.date.isoformat()}, activities={len(self.activities)})"
 
     def __repr__(self):
         """
         Return a detailed string representation of the DailyProgram instance.
-        
-        Includes information about the date, number of activities, and a sample
-        of the activities scheduled (if any).
-        
-        RETURNS:
-            str: A detailed string representation, useful for debugging.
+
+        :return: str. Includes date, number of activities, and a preview of activities.
         """
         if not self.activities:
             activities_preview = "No activities loaded."

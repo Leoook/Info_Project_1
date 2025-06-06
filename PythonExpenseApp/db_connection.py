@@ -4,35 +4,43 @@ import threading
 import logging
 
 class DbConnection:
+    # Class-level variable for the MySQL connection pool (shared by all instances)
     _connection_pool = None
+    # Lock for thread-safe pool initialization
     _lock = threading.Lock()
     
-    # Database configuration
+    # Database configuration dictionary for connection parameters
     _config = {
-        'host': 'localhost',
-        'user': 'root',
-        'password': '',
-        'database': 'project',
-        'charset': 'utf8mb4',
-        'collation': 'utf8mb4_unicode_ci',
-        'autocommit': False,
-        'raise_on_warnings': True
+        'host': 'localhost',                # Database server host
+        'user': 'root',                     # Database user
+        'password': '',                     # Database password
+        'database': 'project',              # Database name
+        'charset': 'utf8mb4',               # Character set for Unicode support
+        'collation': 'utf8mb4_unicode_ci',  # Collation for Unicode
+        'autocommit': False,                # Disable autocommit for transactions
+        'raise_on_warnings': True           # Raise exceptions on warnings
     }
     
+    # Configuration for the MySQL connection pool
     _pool_config = {
-        'pool_name': 'trip_manager_pool',
-        'pool_size': 10,
-        'pool_reset_session': True
+        'pool_name': 'trip_manager_pool',   # Name of the connection pool
+        'pool_size': 10,                    # Maximum number of connections in the pool
+        'pool_reset_session': True          # Reset session state when connection is returned to pool
     }
 
     @classmethod
     def initialize_pool(cls):
-        """Initialize the connection pool"""
+        """
+        Initialize the MySQL connection pool if it hasn't been created yet.
+        Uses thread locking to ensure only one pool is created in multi-threaded environments.
+        Combines the base config and pool config for pool creation.
+        Raises an exception if pool creation fails.
+        """
         if cls._connection_pool is None:
             with cls._lock:
                 if cls._connection_pool is None:
                     try:
-                        # Combine config with pool config
+                        # Combine config with pool config for pool creation
                         pool_config = {**cls._config, **cls._pool_config}
                         cls._connection_pool = pooling.MySQLConnectionPool(**pool_config)
                         logging.info("Database connection pool initialized successfully.")
@@ -44,7 +52,11 @@ class DbConnection:
 
     @classmethod
     def connect(cls):
-        """Get a connection from the pool"""
+        """
+        Get a connection from the connection pool.
+        Initializes the pool if it does not exist.
+        Returns a MySQLConnection object if successful, or None if connection fails.
+        """
         try:
             # Initialize pool if not already done
             if cls._connection_pool is None:
@@ -72,16 +84,21 @@ class DbConnection:
     @classmethod
     def execute_query(cls, query, params=None, fetch_one=False, fetch_all=False):
         """
-        Execute a query with automatic connection management
-        
+        Execute a SQL query with automatic connection and cursor management.
+        Handles SELECT, INSERT, UPDATE, and DELETE queries.
+        Supports fetching one or all results for SELECT queries.
+        Rolls back on error and returns a tuple (success, result or error message).
+
         Args:
-            query (str): SQL query to execute
-            params (tuple): Parameters for the query
-            fetch_one (bool): Whether to fetch one result
-            fetch_all (bool): Whether to fetch all results
-            
+            query (str): SQL query to execute.
+            params (tuple): Parameters for the query (default: None).
+            fetch_one (bool): Whether to fetch one result (default: False).
+            fetch_all (bool): Whether to fetch all results (default: False).
+
         Returns:
             tuple: (success, result/error_message)
+                - success (bool): True if query executed successfully, False otherwise.
+                - result: Query result (fetched data, lastrowid, rowcount) or error message.
         """
         connection = None
         cursor = None
@@ -125,13 +142,17 @@ class DbConnection:
     @classmethod
     def execute_transaction(cls, queries_with_params):
         """
-        Execute multiple queries in a single transaction
-        
+        Execute multiple SQL queries in a single transaction.
+        Rolls back all queries if any query fails.
+        Returns a tuple (success, results or error message).
+
         Args:
-            queries_with_params (list): List of (query, params) tuples
-            
+            queries_with_params (list): List of (query, params) tuples.
+
         Returns:
             tuple: (success, result/error_message)
+                - success (bool): True if all queries executed successfully, False otherwise.
+                - result: List of lastrowid/rowcount for each query, or error message.
         """
         connection = None
         cursor = None
@@ -170,7 +191,13 @@ class DbConnection:
 
     @classmethod
     def test_connection(cls):
-        """Test database connectivity"""
+        """
+        Test database connectivity by executing a simple SELECT statement.
+        Returns True and a success message if the connection works, otherwise False and an error message.
+
+        Returns:
+            tuple: (success, message)
+        """
         try:
             connection = cls.connect()
             if connection and connection.is_connected():
@@ -187,17 +214,23 @@ class DbConnection:
 
     @classmethod
     def get_database_info(cls):
-        """Get database server information"""
+        """
+        Get information about the connected database server.
+        Returns a dictionary with server version, connection ID, database name, user, host, and port.
+
+        Returns:
+            tuple: (success, info or error message)
+        """
         try:
             connection = cls.connect()
             if connection:
                 info = {
-                    'server_version': connection.get_server_info(),
-                    'connection_id': connection.connection_id,
-                    'database': connection.database,
-                    'user': connection.user,
-                    'host': connection.server_host,
-                    'port': connection.server_port
+                    'server_version': connection.get_server_info(), # MySQL server version string
+                    'connection_id': connection.connection_id,      # Unique connection ID
+                    'database': connection.database,                # Database name
+                    'user': connection.user,                        # Connected user
+                    'host': connection.server_host,                  # Server host
+                    'port': connection.server_port                   # Server port
                 }
                 connection.close()
                 return True, info

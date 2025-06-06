@@ -4,70 +4,87 @@ from db_connection import DbConnection
 import datetime
 from collections import defaultdict
 
-
 class TeacherDashboard:
     def __init__(self, root, teacher, main_dashboard_callback):
-        self.root = root
-        self.teacher = teacher
-        self.main_dashboard_callback = main_dashboard_callback
+        """
+        Initialize the TeacherDashboard window and set up the UI for the teacher's dashboard.
+        Args:
+            root (tk.Tk): The main Tkinter window instance.
+            teacher (object): The teacher object (should have name, surname, role attributes).
+            main_dashboard_callback (function): Callback to return to the main dashboard.
+        """
+        self.root = root  # The main Tkinter window for the dashboard
+        self.teacher = teacher  # The teacher object (contains name, surname, role)
+        self.main_dashboard_callback = main_dashboard_callback  # Callback for returning to main dashboard
         
-        self.root.title("Teacher Dashboard - Trip Manager")
-        self.root.geometry("1400x900")
-        self.root.configure(bg='#f8fafc')
+        self.root.title("Teacher Dashboard - Trip Manager")  # Set window title
+        self.root.geometry("1400x900")  # Set window size
+        self.root.configure(bg='#f8fafc')  # Set background color
         
-        # Try to maximize window
+        # Try to maximize the window (platform dependent)
         try:
             self.root.state('zoomed')
         except tk.TclError:
             pass
-            
-        self.setup_ui()
-        self.load_data()
+        
+        self.setup_ui()  # Build and place all widgets
+        self.load_data()  # Load all data from the database
 
     def setup_ui(self):
-        # Main container
+        """
+        Create and arrange all main UI components: header, tabs, and footer.
+        """
+        # Main container frame for the dashboard
         main_container = tk.Frame(self.root, bg='#ffffff', relief='solid', bd=1)
         main_container.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
 
-        # Header section
+        # Header section (title, teacher info, quick stats)
         self.create_header(main_container)
         
-        # Create notebook for tabs
+        # Notebook widget for tabbed interface
         self.notebook = ttk.Notebook(main_container)
         self.notebook.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
         
-        # Create tabs
+        # Create and add all tabs
         self.create_activities_tab()
         self.create_participants_tab()
         self.create_schedule_tab()
         self.create_analytics_tab()
         
-        # Footer with navigation
+        # Footer with navigation and status
         self.create_footer(main_container)
 
     def create_header(self, parent):
+        """
+        Create the header section with the dashboard title, teacher info, and quick stats.
+        Args:
+            parent (tk.Frame): The parent frame to attach the header to.
+        """
         header_frame = tk.Frame(parent, bg='#ffffff', height=100)
         header_frame.pack(fill=tk.X, padx=30, pady=(30, 20))
         header_frame.pack_propagate(False)
 
-        # Title
+        # Title label for the dashboard
         title_label = tk.Label(header_frame, text="Teacher Dashboard",
                               font=("Segoe UI", 32, "bold"), bg="#ffffff", fg="#1e293b")
         title_label.pack(anchor='w')
 
-        # Teacher info
+        # Teacher info label (shows teacher's name)
         teacher_info = f"Teacher: {self.teacher.name} {getattr(self.teacher, 'surname', '')}"
         info_label = tk.Label(header_frame, text=teacher_info,
                              font=("Segoe UI", 16), bg="#ffffff", fg="#64748b")
         info_label.pack(anchor='w', pady=(5, 0))
 
-        # Quick stats
+        # Quick stats frame (populated later)
         stats_frame = tk.Frame(header_frame, bg="#ffffff")
         stats_frame.pack(anchor='w', pady=(10, 0))
         
-        self.stats_labels = {}
-        
+        self.stats_labels = {}  # Dictionary to hold references to stat labels (if needed)
+
     def create_activities_tab(self):
+        """
+        Create the Activities Overview tab, including search/filter and activities treeview.
+        """
         # Activities tab
         activities_frame = ttk.Frame(self.notebook)
         self.notebook.add(activities_frame, text="📋 Activities Overview")
@@ -79,8 +96,9 @@ class TeacherDashboard:
         tk.Label(search_frame, text="Search Activities:", font=("Segoe UI", 12, "bold"),
                 bg='#f8fafc').pack(side=tk.LEFT, padx=(0, 10))
         
-        self.activity_search_var = tk.StringVar()
-        self.activity_search_var.trace('w', self.filter_activities)
+        # Variables for search and filter
+        self.activity_search_var = tk.StringVar()  # Holds the search term for activities
+        self.activity_search_var.trace('w', self.filter_activities)  # Trace changes to update filter
         search_entry = tk.Entry(search_frame, textvariable=self.activity_search_var,
                                font=("Segoe UI", 11), width=30)
         search_entry.pack(side=tk.LEFT, padx=(0, 20))
@@ -89,7 +107,7 @@ class TeacherDashboard:
         tk.Label(search_frame, text="Filter by Day:", font=("Segoe UI", 12, "bold"),
                 bg='#f8fafc').pack(side=tk.LEFT, padx=(0, 10))
         
-        self.day_filter_var = tk.StringVar(value="All Days")
+        self.day_filter_var = tk.StringVar(value="All Days")  # Holds the selected day filter
         self.day_filter = ttk.Combobox(search_frame, textvariable=self.day_filter_var,
                                       state="readonly", width=15)
         self.day_filter.pack(side=tk.LEFT)
@@ -140,9 +158,12 @@ class TeacherDashboard:
         self.activities_tree.column("description", width=300, minwidth=200)
         
         # Bind double-click to show participants
-        self.activities_tree.bind("<Double-1>", self.show_activity_participants)
+        self.activities_tree.bind("<Double-1>", self.show_activity_participants)  # Double-click to show participants
 
     def create_participants_tab(self):
+        """
+        Create the Students & Enrollment tab, including search/filter and students treeview.
+        """
         # Participants tab
         participants_frame = ttk.Frame(self.notebook)
         self.notebook.add(participants_frame, text="👥 Students & Enrollment")
@@ -154,8 +175,9 @@ class TeacherDashboard:
         tk.Label(search_frame, text="Search Students:", font=("Segoe UI", 12, "bold"),
                 bg='#f8fafc').pack(side=tk.LEFT, padx=(0, 10))
         
-        self.student_search_var = tk.StringVar()
-        self.student_search_var.trace('w', self.filter_students)
+        # Variables for search and filter
+        self.student_search_var = tk.StringVar()  # Holds the search term for students
+        self.student_search_var.trace('w', self.filter_students)  # Trace changes to update filter
         search_entry = tk.Entry(search_frame, textvariable=self.student_search_var,
                                font=("Segoe UI", 11), width=30)
         search_entry.pack(side=tk.LEFT, padx=(0, 20))
@@ -164,7 +186,7 @@ class TeacherDashboard:
         tk.Label(search_frame, text="Filter by Class:", font=("Segoe UI", 12, "bold"),
                 bg='#f8fafc').pack(side=tk.LEFT, padx=(0, 10))
         
-        self.class_filter_var = tk.StringVar(value="All Classes")
+        self.class_filter_var = tk.StringVar(value="All Classes")  # Holds the selected class filter
         self.class_filter = ttk.Combobox(search_frame, textvariable=self.class_filter_var,
                                         state="readonly", width=15)
         self.class_filter.pack(side=tk.LEFT)
@@ -210,9 +232,12 @@ class TeacherDashboard:
         self.students_tree.column("special_needs", width=300, minwidth=200)
         
         # Bind double-click to show student activities
-        self.students_tree.bind("<Double-1>", self.show_student_activities)
+        self.students_tree.bind("<Double-1>", self.show_student_activities)  # Double-click to show activities
 
     def create_schedule_tab(self):
+        """
+        Create the Daily Schedule tab, including date selection and schedule display.
+        """
         # Daily schedule tab
         schedule_frame = ttk.Frame(self.notebook)
         self.notebook.add(schedule_frame, text="📅 Daily Schedule")
@@ -224,11 +249,12 @@ class TeacherDashboard:
         tk.Label(date_frame, text="Select Date:", font=("Segoe UI", 12, "bold"),
                 bg='#f8fafc').pack(side=tk.LEFT, padx=(0, 10))
         
-        self.selected_date_var = tk.StringVar()
+        # Variable for selected date
+        self.selected_date_var = tk.StringVar()  # Holds the selected date for the schedule
         self.date_combo = ttk.Combobox(date_frame, textvariable=self.selected_date_var,
                                       state="readonly", width=20)
         self.date_combo.pack(side=tk.LEFT, padx=(0, 20))
-        self.date_combo.bind('<<ComboboxSelected>>', self.load_daily_schedule)
+        self.date_combo.bind('<<ComboboxSelected>>', self.load_daily_schedule)  # Update schedule on date change
         
         # Today button
         today_btn = tk.Button(date_frame, text="Today", font=("Segoe UI", 10, "bold"),
@@ -237,10 +263,13 @@ class TeacherDashboard:
         today_btn.pack(side=tk.LEFT, padx=(0, 10))
         
         # Schedule display frame
-        self.schedule_display_frame = tk.Frame(schedule_frame, bg='#ffffff')
+        self.schedule_display_frame = tk.Frame(schedule_frame, bg='#ffffff')  # Frame to display schedule
         self.schedule_display_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
     def create_analytics_tab(self):
+        """
+        Create the Analytics tab and its widgets.
+        """
         # Analytics tab
         analytics_frame = ttk.Frame(self.notebook)
         self.notebook.add(analytics_frame, text="📊 Analytics")
@@ -249,6 +278,11 @@ class TeacherDashboard:
         self.create_analytics_widgets(analytics_frame)
 
     def create_analytics_widgets(self, parent):
+        """
+        Create widgets for analytics: trip statistics and most popular activities.
+        Args:
+            parent (tk.Frame): The parent frame to attach analytics widgets to.
+        """
         # Statistics frame
         stats_frame = tk.LabelFrame(parent, text="Trip Statistics", font=("Segoe UI", 14, "bold"),
                                    bg='#ffffff', fg='#1e293b', relief='solid', bd=2)
@@ -258,7 +292,7 @@ class TeacherDashboard:
         stats_grid = tk.Frame(stats_frame, bg='#ffffff')
         stats_grid.pack(fill=tk.X, padx=20, pady=20)
         
-        self.stats_widgets = {}
+        self.stats_widgets = {}  # Dictionary to hold references to analytics stat widgets (if needed)
         
         # Popular activities frame
         popular_frame = tk.LabelFrame(parent, text="Most Popular Activities", 
@@ -281,31 +315,39 @@ class TeacherDashboard:
         scrollbar.config(command=self.popular_activities_list.yview)
 
     def create_footer(self, parent):
+        """
+        Create the footer section with navigation and status label.
+        Args:
+            parent (tk.Frame): The parent frame to attach the footer to.
+        """
         footer_frame = tk.Frame(parent, bg='#e5e7eb', height=60)
         footer_frame.pack(fill=tk.X, side=tk.BOTTOM)
         footer_frame.pack_propagate(False)
         
-        # Back button
+        # Back button to return to main dashboard
         back_btn = tk.Button(footer_frame, text="← Back to Main Dashboard",
                             font=("Segoe UI", 12, "bold"), bg="#6b7280", fg="white",
                             relief='flat', bd=0, activebackground="#4b5563",
                             cursor="hand2", command=self.go_back)
         back_btn.pack(side=tk.LEFT, padx=20, pady=15)
         
-        # Status label
+        # Status label for messages
         self.status_label = tk.Label(footer_frame, text="Ready",
                                     font=("Segoe UI", 10), bg="#e5e7eb", fg="#64748b")
         self.status_label.pack(side=tk.RIGHT, padx=20, pady=15)
 
     def load_data(self):
-        """Load all data from database"""
-        self.update_status("Loading data...")
+        """
+        Load all activities, students, unique days, and classes from the database.
+        Populates the UI with the loaded data and sets up filters and analytics.
+        """
+        self.update_status("Loading data...")  # Show loading status
         
-        connection = DbConnection.connect()
+        connection = DbConnection.connect()  # Connect to the database
         if not connection:
             messagebox.showerror("Database Error", "Could not connect to database")
             return
-            
+        
         try:
             cursor = connection.cursor()
             # Load all activities with participant counts
@@ -316,7 +358,7 @@ class TeacherDashboard:
                 FROM activities a
                 ORDER BY a.day, a.start_time
             """)
-            self.activities_data = cursor.fetchall()
+            self.activities_data = cursor.fetchall()  # List of tuples with activity data
             
             # Load all students with activity counts
             cursor.execute("""
@@ -327,18 +369,18 @@ class TeacherDashboard:
                 WHERE s.role = 'student'
                 ORDER BY s.class, s.surname, s.name
             """)
-            self.students_data = cursor.fetchall()
+            self.students_data = cursor.fetchall()  # List of tuples with student data
             
             # Load unique days and classes for filters
             cursor.execute("SELECT DISTINCT day FROM activities ORDER BY day")
-            self.unique_days = [row[0] for row in cursor.fetchall()]
+            self.unique_days = [row[0] for row in cursor.fetchall()]  # List of unique days
             
             cursor.execute("SELECT DISTINCT class FROM students WHERE role = 'student' ORDER BY class")
-            self.unique_classes = [row[0] for row in cursor.fetchall()]
+            self.unique_classes = [row[0] for row in cursor.fetchall()]  # List of unique classes
             
             connection.close()
             
-            # Populate UI
+            # Populate UI with loaded data
             self.populate_activities()
             self.populate_students()
             self.setup_filters()
@@ -346,7 +388,7 @@ class TeacherDashboard:
             self.setup_schedule_dates()
             self.update_quick_stats()
             
-            self.update_status("Data loaded successfully")
+            self.update_status("Data loaded successfully")  # Show success status
             
         except Exception as e:
             connection.close()
@@ -354,7 +396,9 @@ class TeacherDashboard:
             self.update_status("Error loading data")
 
     def populate_activities(self):
-        """Populate activities treeview"""
+        """
+        Populate the activities treeview with activity data.
+        """
         # Clear existing items
         for item in self.activities_tree.get_children():
             self.activities_tree.delete(item)
@@ -372,7 +416,9 @@ class TeacherDashboard:
                                               participant_count, max_str, description or ""))
 
     def populate_students(self):
-        """Populate students treeview"""
+        """
+        Populate the students treeview with student data.
+        """
         # Clear existing items
         for item in self.students_tree.get_children():
             self.students_tree.delete(item)
@@ -386,7 +432,9 @@ class TeacherDashboard:
                                             activity_count, special_needs_str))
 
     def setup_filters(self):
-        """Setup filter comboboxes"""
+        """
+        Setup the values for day and class filter comboboxes based on loaded data.
+        """
         # Day filter
         day_values = ["All Days"] + [day.strftime("%Y-%m-%d") for day in self.unique_days]
         self.day_filter['values'] = day_values
@@ -396,7 +444,9 @@ class TeacherDashboard:
         self.class_filter['values'] = class_values
 
     def setup_schedule_dates(self):
-        """Setup date selection for schedule"""
+        """
+        Setup the date selection combobox for the schedule tab and set default date.
+        """
         date_values = [day.strftime("%Y-%m-%d") for day in self.unique_days]
         self.date_combo['values'] = date_values
         
@@ -410,7 +460,11 @@ class TeacherDashboard:
             self.load_daily_schedule()
 
     def filter_activities(self, *args):
-        """Filter activities based on search and day filter"""
+        """
+        Filter the activities treeview based on the search term and selected day filter.
+        Args:
+            *args: Required for Tkinter trace compatibility.
+        """
         search_term = self.activity_search_var.get().lower()
         day_filter = self.day_filter_var.get()
         
@@ -444,7 +498,11 @@ class TeacherDashboard:
                                               participant_count, max_str, description or ""))
 
     def filter_students(self, *args):
-        """Filter students based on search and class filter"""
+        """
+        Filter the students treeview based on the search term and selected class filter.
+        Args:
+            *args: Required for Tkinter trace compatibility.
+        """
         search_term = self.student_search_var.get().lower()
         class_filter = self.class_filter_var.get()
         
@@ -475,7 +533,11 @@ class TeacherDashboard:
                                             activity_count, special_needs_str))
 
     def show_activity_participants(self, event):
-        """Show participants for selected activity"""
+        """
+        Show a popup window listing all participants for the selected activity.
+        Args:
+            event: The Tkinter event object (from double-click).
+        """
         selection = self.activities_tree.selection()
         if not selection:
             return
@@ -519,7 +581,11 @@ class TeacherDashboard:
             messagebox.showerror("Error", f"Error loading participants: {str(e)}")
 
     def show_student_activities(self, event):
-        """Show activities for selected student"""
+        """
+        Show a popup window listing all activities for the selected student.
+        Args:
+            event: The Tkinter event object (from double-click).
+        """
         selection = self.students_tree.selection()
         if not selection:
             return
@@ -564,7 +630,12 @@ class TeacherDashboard:
             messagebox.showerror("Error", f"Error loading student activities: {str(e)}")
 
     def show_participants_window(self, activity_name, participants):
-        """Show participants in a popup window"""
+        """
+        Create and display a popup window showing participants for a given activity.
+        Args:
+            activity_name (str): The name of the activity.
+            participants (list): List of tuples with participant info.
+        """
         popup = tk.Toplevel(self.root)
         popup.title(f"Participants - {activity_name}")
         popup.geometry("600x400")
@@ -599,7 +670,12 @@ class TeacherDashboard:
         close_btn.pack(pady=20)
 
     def show_student_activities_window(self, student_name, activities):
-        """Show student activities in a popup window"""
+        """
+        Create and display a popup window showing activities for a given student.
+        Args:
+            student_name (str): The name of the student.
+            activities (list): List of tuples with activity info.
+        """
         popup = tk.Toplevel(self.root)
         popup.title(f"Activities - {student_name}")
         popup.geometry("700x400")
@@ -641,7 +717,11 @@ class TeacherDashboard:
         close_btn.pack(pady=20)
 
     def load_daily_schedule(self, event=None):
-        """Load schedule for selected date"""
+        """
+        Load and display the schedule for the selected date in the schedule tab.
+        Args:
+            event: Optional Tkinter event object (from combobox selection).
+        """
         selected_date = self.selected_date_var.get()
         if not selected_date:
             return
@@ -747,14 +827,18 @@ class TeacherDashboard:
             error_label.pack(expand=True)
 
     def select_today(self):
-        """Select today's date in schedule"""
+        """
+        Set the schedule date selection to today and load today's schedule.
+        """
         today = datetime.date.today().strftime("%Y-%m-%d")
         if today in self.date_combo['values']:
             self.selected_date_var.set(today)
             self.load_daily_schedule()
 
     def load_analytics(self):
-        """Load analytics data"""
+        """
+        Load analytics data (e.g., most popular activities) from the database and update the analytics tab.
+        """
         connection = DbConnection.connect()
         if not connection:
             return
@@ -787,38 +871,46 @@ class TeacherDashboard:
             self.popular_activities_list.insert(tk.END, f"Error loading analytics: {str(e)}")
 
     def update_quick_stats(self):
-        """Update quick statistics in header"""
-        total_activities = len(self.activities_data)
-        total_students = len(self.students_data)
+        """
+        Update the quick statistics in the header (total activities, students, enrollments).
+        """
+        total_activities = len(self.activities_data)  # Number of activities loaded
+        total_students = len(self.students_data)  # Number of students loaded
         
-        # Calculate total enrollments
+        # Calculate total enrollments by summing participant_count for all activities
         total_enrollments = sum(activity[8] for activity in self.activities_data)  # participant_count
         
-        # Create stats if not exists
+        # Create stats frame if it doesn't exist
         if not hasattr(self, 'stats_frame'):
             self.stats_frame = tk.Frame(self.root.children[list(self.root.children.keys())[0]], bg="#ffffff")
-            
+        
         stats_text = f"📋 {total_activities} Activities  |  👥 {total_students} Students  |  ✅ {total_enrollments} Total Enrollments"
         
-        # Remove old stats if exists
+        # Remove old stats labels if they exist
         for child in self.stats_frame.winfo_children():
             child.destroy()
-            
+        
+        # Create and pack the new stats label
         stats_label = tk.Label(self.stats_frame, text=stats_text,
                               font=("Segoe UI", 12), bg="#ffffff", fg="#059669")
         stats_label.pack()
 
     def update_status(self, message):
-        """Update status message"""
+        """
+        Update the status message in the footer.
+        Args:
+            message (str): The status message to display.
+        """
         if hasattr(self, 'status_label'):
             self.status_label.config(text=message)
             self.root.update_idletasks()
 
     def go_back(self):
-        """Return to main dashboard"""
+        """
+        Destroy the dashboard window and return to the main dashboard via callback.
+        """
         self.root.destroy()
         self.main_dashboard_callback()
-
 
 if __name__ == "__main__":
     # Test the teacher dashboard

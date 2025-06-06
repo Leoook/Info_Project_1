@@ -21,11 +21,7 @@ from datetime import datetime
 class Activity:
     """
     Represents a single trip activity with all its properties and behaviors.
-    
-    This class encapsulates all data and functionality related to a trip activity,
-    including scheduling, participant management, feedback collection, and
-    statistical analysis.
-    
+
     ATTRIBUTES:
         id (int): Unique database identifier (None for new activities)
         name (str): Activity name/title
@@ -43,22 +39,17 @@ class Activity:
     def __init__(self, name, day, start, finish, location, maxpart=None, duration=None, description=None):
         """
         Initialize a new Activity instance with the provided parameters.
-        
-        This constructor creates a new activity object that can be saved to the database
-        or represents an existing activity loaded from the database.
-        
-        PARAMETERS:
-            name (str): The name/title of the activity (required)
-            day (str/date): The date when the activity occurs (required)
-            start (int): Starting hour in 24-hour format, e.g., 14 for 2 PM (required)
-            finish (int): Ending hour in 24-hour format (required)
-            location (str): Physical location where activity takes place (required)
-            maxpart (int, optional): Maximum number of participants. None means unlimited
-            duration (int, optional): Duration in hours. Can be calculated from start/finish
-            description (str, optional): Detailed description of what the activity involves
-            
+
+        :param name: str - The name/title of the activity (required)
+        :param day: str/date - The date when the activity occurs (required)
+        :param start: int - Starting hour in 24-hour format, e.g., 14 for 2 PM (required)
+        :param finish: int - Ending hour in 24-hour format (required)
+        :param location: str - Physical location where activity takes place (required)
+        :param maxpart: int, optional - Maximum number of participants. None means unlimited
+        :param duration: int, optional - Duration in hours. Can be calculated from start/finish
+        :param description: str, optional - Detailed description of what the activity involves
+
         USAGE EXAMPLE:
-            # Create a new museum visit activity
             museum_visit = Activity(
                 name="National History Museum",
                 day="2024-03-15", 
@@ -72,40 +63,35 @@ class Activity:
         """
         # Database identifier - None for new activities, set when saved to DB
         self.id = None
-        
-        # Core activity properties (required fields)
-        self.name = name                    # Activity title/name
-        self.day = day                      # Date of activity
-        self.start = start                  # Start time (24-hour format)
-        self.finish = finish                # End time (24-hour format)
-        self.location = location            # Physical location
-        
-        # Optional properties
-        self.maxpart = maxpart              # Maximum participants (None = unlimited)
-        self.duration = duration            # Duration in hours
-        self.description = description      # Detailed description
-        
-        # Runtime collections (loaded from database when needed)
-        self.participants = []              # List of enrolled students
-        self.activity_feedback = []         # List of feedback entries
+        # Activity title/name (string)
+        self.name = name
+        # Date of activity (string or date)
+        self.day = day
+        # Start time (24-hour format, integer)
+        self.start = start
+        # End time (24-hour format, integer)
+        self.finish = finish
+        # Physical location (string)
+        self.location = location
+        # Maximum participants (integer or None for unlimited)
+        self.maxpart = maxpart
+        # Duration in hours (integer or None)
+        self.duration = duration
+        # Detailed description (string or None)
+        self.description = description
+        # List of enrolled students (populated from DB as needed)
+        self.participants = []
+        # List of feedback entries (populated from DB as needed)
+        self.activity_feedback = []
 
     def get_current_participants(self):
         """
         Retrieve the current number of students enrolled in this activity.
-        
-        This method queries the database to get the real-time count of participants.
-        It's used for capacity checking and statistical reporting.
-        
-        RETURNS:
-            int: Current number of enrolled participants
-            
-        DATABASE QUERY:
-            Counts records in student_activities table for this activity
-            
-        USAGE:
-            current_count = activity.get_current_participants()
-            if current_count >= activity.maxpart:
-                print("Activity is full!")
+
+        :return: int - Current number of enrolled participants
+
+        - Queries the student_activities table for this activity's ID.
+        - Returns 0 if the activity is not saved or on error.
         """
         # Check if activity has been saved to database (has an ID)
         if not self.id:
@@ -125,22 +111,10 @@ class Activity:
     def get_participant_list(self):
         """
         Get a detailed list of all students enrolled in this activity.
-        
-        This method retrieves full participant information including names,
-        which is useful for displaying enrollment lists and managing participants.
-        
-        RETURNS:
-            list: List of tuples containing (student_id, first_name, last_name)
-            Empty list if no participants or database error
-            
-        DATABASE QUERY:
-            Joins student_activities with students table to get participant details
-            Orders results alphabetically by last name, then first name
-            
-        USAGE:
-            participants = activity.get_participant_list()
-            for student_id, first_name, last_name in participants:
-                print(f"{first_name} {last_name} is enrolled")
+
+        :return: list of tuples (student_id, first_name, last_name)
+        - Returns empty list if no participants or database error.
+        - Joins student_activities and students tables.
         """
         # Check if activity exists in database
         if not self.id:
@@ -162,29 +136,11 @@ class Activity:
     def can_student_leave_feedback(self, student_id):
         """
         Check if a specific student is allowed to leave feedback for this activity.
-        
-        This method enforces business rules for feedback:
-        1. Student must have participated in the activity
-        2. Student can only leave one feedback per activity
-        
-        PARAMETERS:
-            student_id (int): The ID of the student wanting to leave feedback
-            
-        RETURNS:
-            tuple: (can_leave_feedback, reason_message)
-                - can_leave_feedback (bool): True if allowed, False if not
-                - reason_message (str): Explanation of why feedback is/isn't allowed
-                
-        BUSINESS LOGIC:
-            - Only participants can leave feedback (ensures authenticity)
-            - One feedback per student per activity (prevents spam)
-            
-        USAGE:
-            can_feedback, message = activity.can_student_leave_feedback(student.id)
-            if can_feedback:
-                show_feedback_form()
-            else:
-                show_error_message(message)
+
+        :param student_id: int - The ID of the student wanting to leave feedback
+        :return: tuple (can_leave_feedback: bool, reason_message: str)
+        - Only participants can leave feedback.
+        - One feedback per student per activity.
         """
         # Import Feedback class to use its validation logic
         from PythonExpenseApp.feedback import Feedback
@@ -195,31 +151,9 @@ class Activity:
     def get_rating_details(self):
         """
         Get comprehensive rating statistics for this activity.
-        
-        This method calculates detailed statistics about all ratings received,
-        including distribution of ratings, averages, and counts. Used for
-        analytics and displaying rating information in the GUI.
-        
-        RETURNS:
-            dict or None: Dictionary containing rating statistics or None if no ratings
-            Dictionary structure:
-            {
-                'total_ratings': int,           # Total number of ratings
-                'average_rating': float,        # Average of all ratings
-                'median_rating': float,         # Median rating value
-                'rating_distribution': dict     # Count of each rating (1-5)
-            }
-            
-        CALCULATIONS:
-            - Rating distribution: Count of 1-star, 2-star, etc. ratings
-            - Average: Mathematical mean of all ratings
-            - Median: Middle value when ratings are sorted
-            
-        USAGE:
-            rating_data = activity.get_rating_details()
-            if rating_data:
-                print(f"Average rating: {rating_data['average_rating']:.2f}")
-                print(f"Total reviews: {rating_data['total_ratings']}")
+
+        :return: dict or None - Dictionary with rating stats or None if no ratings.
+        Keys: 'total_ratings', 'average_rating', 'median_rating', 'rating_distribution'
         """
         # Check if activity exists in database
         if not self.id:
@@ -280,34 +214,9 @@ class Activity:
     def get_comprehensive_details(self):
         """
         Retrieve all information needed for the activity details GUI.
-        
-        This method aggregates all activity-related data into a single structure
-        that the GUI can use to display comprehensive activity information.
-        It's the main data provider for the ActivityDetailsGUI class.
-        
-        RETURNS:
-            dict or None: Complete activity information or None if activity doesn't exist
-            Dictionary structure:
-            {
-                'participation': {
-                    'current_participants': int,    # Current enrollment count
-                    'participant_list': list        # List of enrolled students
-                },
-                'ratings': dict,                    # Rating statistics (from get_rating_details)
-                'recent_feedback': list             # Recent feedback entries with student info
-            }
-            
-        DATA SOURCES:
-            - Participation data from student_activities table
-            - Rating statistics from feedback table
-            - Recent feedback with student names joined
-            
-        USAGE:
-            details = activity.get_comprehensive_details()
-            if details:
-                display_activity_details(details)
-            else:
-                show_error("Activity not found")
+
+        :return: dict or None - Complete activity information or None if not found.
+        Keys: 'participation', 'ratings', 'recent_feedback'
         """
         # Ensure activity exists in database
         if not self.id:
@@ -350,21 +259,9 @@ class Activity:
     def get_all_activities():
         """
         Retrieve all activities from the database.
-        
-        This static method loads all activities from the database and returns them
-        as a list of Activity objects. Used for displaying activity lists in the GUI.
-        
-        RETURNS:
-            list: List of Activity objects loaded from database
-            Empty list if no activities or database error
-            
-        DATABASE QUERY:
-            Selects all activities ordered by day and start time for logical display
-            
-        USAGE:
-            activities = Activity.get_all_activities()
-            for activity in activities:
-                print(f"{activity.name} on {activity.day}")
+
+        :return: list of Activity objects loaded from database.
+        - Returns empty list if no activities or database error.
         """
         # Query to get all activities in chronological order
         query = """SELECT id, name, day, start_time, finish_time, location, 
@@ -390,25 +287,9 @@ class Activity:
     def get_activity_by_id(activity_id):
         """
         Retrieve a specific activity by its database ID.
-        
-        This static method loads a single activity from the database using its
-        unique identifier. Used when displaying detailed activity information.
-        
-        PARAMETERS:
-            activity_id (int): The unique database ID of the activity to retrieve
-            
-        RETURNS:
-            Activity or None: Activity object if found, None if not found or error
-            
-        DATABASE QUERY:
-            Selects single activity by ID
-            
-        USAGE:
-            activity = Activity.get_activity_by_id(5)
-            if activity:
-                display_activity_details(activity)
-            else:
-                show_error("Activity not found")
+
+        :param activity_id: int - The unique database ID of the activity to retrieve
+        :return: Activity or None - Activity object if found, None if not found or error
         """
         # Query to get specific activity by ID
         query = """SELECT id, name, day, start_time, finish_time, location, 
@@ -429,25 +310,9 @@ class Activity:
     def save_to_database(self):
         """
         Save this activity to the database.
-        
-        This method inserts a new activity record into the database. Used when
-        creating new activities through the application.
-        
-        RETURNS:
-            bool: True if saved successfully, False if error occurred
-            
-        DATABASE OPERATION:
-            INSERT into activities table with all activity properties
-            
-        SIDE EFFECTS:
-            Sets self.id to the new database ID if successful
-            
-        USAGE:
-            new_activity = Activity("Museum Visit", "2024-03-15", 9, 12, "Museum")
-            if new_activity.save_to_database():
-                print(f"Activity saved with ID: {new_activity.id}")
-            else:
-                print("Failed to save activity")
+
+        :return: bool - True if saved successfully, False if error occurred.
+        - Sets self.id to the new database ID if successful.
         """
         # SQL INSERT query for new activity
         query = """INSERT INTO activities (name, day, start_time, finish_time, location, 
@@ -468,22 +333,9 @@ class Activity:
     def is_full(self):
         """
         Check if this activity has reached its participant capacity.
-        
-        This method determines if the activity can accept more participants
-        based on the maximum capacity setting.
-        
-        RETURNS:
-            bool: True if activity is at capacity, False if it can accept more participants
-            
-        LOGIC:
-            - If maxpart is None (unlimited), always returns False
-            - If maxpart is set, compares current participants to maximum
-            
-        USAGE:
-            if activity.is_full():
-                show_message("Sorry, this activity is full")
-            else:
-                allow_registration()
+
+        :return: bool - True if activity is at capacity, False if it can accept more participants.
+        - If maxpart is None (unlimited), always returns False.
         """
         # Activities with no maximum capacity are never full
         if not self.maxpart:
@@ -495,15 +347,7 @@ class Activity:
     def __str__(self):
         """
         Return a string representation of this activity.
-        
-        This method provides a human-readable representation of the activity
-        for debugging and logging purposes.
-        
-        RETURNS:
-            str: Formatted string with key activity information
-            
-        USAGE:
-            print(activity)  # Automatically calls __str__()
-            logger.info(f"Processing {activity}")
+
+        :return: str - Formatted string with key activity information.
         """
         return f"Activity(id={self.id}, name={self.name}, day={self.day}, participants={self.get_current_participants()})"

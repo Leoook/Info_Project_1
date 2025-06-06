@@ -3,37 +3,94 @@ import mysql.connector
 
 class Group:
     def __init__(self, name, common_activity, dietary_needs):
+        """
+        Initializes a new Group object with the given name, common activity, and dietary needs.
+
+        :param name: str - The name of the group.
+        :param common_activity: str - The activity that is common to all group members.
+        :param dietary_needs: str - Any dietary needs or restrictions for the group.
+        """
+        # Unique identifier for the group (int or None if not saved to DB yet)
         self.id = None
+        # Name of the group (string, e.g., "Group A")
         self.name = name # Added name attribute
+        # List of members in the group (list of Student objects or IDs/names)
         self.members = [] # This will store Student objects if loaded, or IDs/names
+        # The activity that is common to all group members (string)
         self.common_activity = common_activity
+        # Dietary needs or restrictions for the group (string)
         self.dietary_needs = dietary_needs
+        # Timestamp when the group was created (datetime or None if not set)
         self.created_at = None
 
     def add_member(self, student):
+        """
+        Adds a student to the group's members list.
+
+        :param student: Student object or identifier to add to the group.
+        :return: None
+        """
         self.members.append(student)
 
     def remove_member(self, student):
+        """
+        Removes a student from the group's members list if present.
+
+        :param student: Student object or identifier to remove from the group.
+        :return: None
+        """
         if student in self.members:
             self.members.remove(student)
 
     def get_members(self):
+        """
+        Returns the list of members in the group.
+
+        :return: list - List of Student objects or identifiers.
+        """
         return self.members
 
     def get_common_activity(self):
+        """
+        Returns the common activity for the group.
+
+        :return: str - The group's common activity.
+        """
         return self.common_activity
 
     def set_common_activity(self, common_activity):
+        """
+        Sets the common activity for the group.
+
+        :param common_activity: str - The new common activity.
+        :return: None
+        """
         self.common_activity = common_activity
 
     def get_dietary_needs(self):
+        """
+        Returns the dietary needs for the group.
+
+        :return: str - The group's dietary needs.
+        """
         return self.dietary_needs
 
     def set_dietary_needs(self, dietary_needs):
+        """
+        Sets the dietary needs for the group.
+
+        :param dietary_needs: str - The new dietary needs.
+        :return: None
+        """
         self.dietary_needs = dietary_needs
 
     def save_to_database(self):
-        """Save group to database using enhanced connection"""
+        """
+        Saves the group to the database using the DbConnection class.
+        Sets the group's ID after successful insertion.
+
+        :return: bool - True if saved successfully, False otherwise.
+        """
         # Table creation is handled by DbConnection.create_tables_if_not_exist() or a setup script.
         
         query = "INSERT INTO groups (name, common_activity, dietary_needs) VALUES (%s, %s, %s)"

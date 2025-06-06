@@ -180,6 +180,5 @@ CONSTRAINT check_student_role CHECK (
 
 ---
 
-## 🤝 Contributing
 
 

@@ -15,7 +15,7 @@ class LoginGUI:
         """
         self.root = root  # The main Tkinter window for the login GUI
         self.root.title("Trip Manager - Login")  # Set the window title
-        self.root.geometry("650x750")  # Set the window size (width x height)
+        self.root.geometry("650x800")  # Set the window size (width x height)
         self.root.resizable(True, True)  # Allow window resizing in both directions
         self.root.configure(bg='#f8fafc')  # Set the background color of the window
         self.on_login_success = on_login_success  # Callback for successful login
@@ -34,7 +34,7 @@ class LoginGUI:
         main_container.pack(fill=tk.BOTH, expand=True, padx=50, pady=50)
         
         # Header section containing the title and exit button
-        header_frame = tk.Frame(main_container, bg='#ffffff', height=80)
+        header_frame = tk.Frame(main_container, bg='#ffffff', height=100)
         header_frame.pack(fill=tk.X, padx=40, pady=(40, 20))
         header_frame.pack_propagate(False)
         
@@ -51,7 +51,7 @@ class LoginGUI:
         title_label.pack(anchor='w')
         
         # Subtitle label for the login portal
-        subtitle_label = tk.Label(header_frame, text="Student Login Portal", 
+        subtitle_label = tk.Label(header_frame, text="Login Portal", 
                                  font=("Segoe UI", 16), bg="#ffffff", fg="#64748b")
         subtitle_label.pack(anchor='w', pady=(5, 0))
         
@@ -112,34 +112,34 @@ class LoginGUI:
             try:
                 cursor = connection.cursor()  # Create a cursor for executing SQL queries
                 # Use plain text password comparison (for demonstration; not secure for production)
-                query = "SELECT id, name, surname, email, password, special_needs, role FROM students WHERE email = %s"
+                query = "SELECT id, name, surname, email, password, special_needs, role, class, age FROM students WHERE email = %s"
                 cursor.execute(query, (username,))  # Execute the query with the provided username (email)
                 result = cursor.fetchone()  # Fetch the first matching record
-                connection.close()  # Close the database connection
+                connection.close()
 
                 if result:
-                    user_id, name, surname, email, stored_password, special_needs, role = result  # Unpack user data
-                    if stored_password == password:  # Compare entered password with stored password
-                        # Create a Student object that includes the role
-                        current_user = Student(name, surname, 0, special_needs)  # age=0 placeholder
-                        current_user.id = user_id  # Set the user ID
-                        current_user.email = email  # Set the user email
-                        setattr(current_user, 'role', role)  # Add role attribute dynamically
+                    user_id, name, surname, email, stored_password, special_needs, role, class_, age = result
+                    if stored_password == password:  # Controlla se la password inserita corrisponde a quella salvata nel database
+                        current_user = Student(name, surname, age, special_needs)  # Crea un oggetto Student con i dati dell'utente
+                        current_user.class_ = class_  # Assegna la classe all'oggetto Student
+                        current_user.id = user_id  # Assegna l'ID all'oggetto Student
+                        current_user.email = email  # Assegna l'email all'oggetto Student
+                        setattr(current_user, 'role', role)  # Imposta il ruolo (es. student, teacher) nell'oggetto Student
 
                         # Show a success message and close the login window
-                        messagebox.showinfo("Login Successful", f"Welcome {name} {surname} ({role})!", parent=self.root)
-                        self.root.destroy()
-                        if self.on_login_success:
-                            self.on_login_success(current_user)  # Call the success callback with the user object
+                        messagebox.showinfo("Login Successful", f"Welcome {name} {surname} ({role})!", parent=self.root)  # Mostra un messaggio di successo
+                        self.root.destroy()  # Chiude la finestra di login
+                        if self.on_login_success:  # Se è stata fornita una callback per il login
+                            self.on_login_success(current_user)  # Chiama la callback passando l'oggetto utente loggato
                     else:
                         # Show error if password does not match
-                        messagebox.showerror("Login Failed", "Invalid username or password.", parent=self.root)
+                        messagebox.showerror("Login Failed", "Invalid username or password.", parent=self.root)  # Mostra errore se la password non corrisponde
                 else:
                     # Show error if no user is found with the given username
-                    messagebox.showerror("Login Failed", "Invalid username or password.", parent=self.root)
+                    messagebox.showerror("Login Failed", "Invalid username or password.", parent=self.root)  # Mostra errore se l'utente non esiste
             except Exception as e:
                 # Show error if a database or query error occurs
-                messagebox.showerror("Login Error", f"An error occurred: {e}", parent=self.root)
+                messagebox.showerror("Login Error", f"An error occurred: {e}", parent=self.root)  # Mostra errore se c'è un problema con il database o la query
         else:
             # Show error if the database connection fails
-            messagebox.showerror("Database Error", "Could not connect to the database.", parent=self.root)
+            messagebox.showerror("Database Error", "Could not connect to the database.", parent=self.root)  # Mostra errore se la connessione al database fallisce

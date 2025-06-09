@@ -331,6 +331,7 @@ class Student:
         :param activity_id: int - The ID of the activity.
         :return: bool - True if feedback can be left, False otherwise.
         """
+        # Verifica se lo studente ha partecipato all'attività e non ha già lasciato un feedback
         return (self.has_participated_in_activity(activity_id) and 
                 not self.has_given_feedback_for_activity(activity_id))
 
@@ -340,6 +341,7 @@ class Student:
 
         :return: str - Human-readable string describing the student.
         """
+        # Restituisce una stringa leggibile con tutti gli attributi principali dello studente
         return (f"Student [name={self.name}, surname={self.surname}, age={self.age}, "
                 f"specialNeeds={self.special_needs}, selectedActivities={self.selected_activities}, "
                 f"totalExpenses={self.total_expenses}, feeShare={self.fee_share}, "

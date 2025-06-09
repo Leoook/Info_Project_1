@@ -182,6 +182,7 @@ class Statistics:
 
         :return: str - A formatted string summarizing the statistics.
         """
-        return (f"Statistics [Total Participants={self.get_total_participants()}, "
-                f"Most Popular Activity={self.get_most_popular_activity()}, "
-                f"Average Participants={self.get_average_participants()}]")
+        # Restituisce una string che riassume le statistiche principali
+        return (f"Statistics [Total Participants={self.get_total_participants()}, "  # Mostra il totale dei partecipanti
+                f"Most Popular Activity={self.get_most_popular_activity()}, "        # Mostra l'attività più popolare
+                f"Average Participants={self.get_average_participants()}]")           # Mostra la media dei partecipanti per attività

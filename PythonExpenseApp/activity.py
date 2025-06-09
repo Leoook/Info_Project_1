@@ -156,7 +156,7 @@ class Activity:
         Keys: 'total_ratings', 'average_rating', 'median_rating', 'rating_distribution'
         """
         # Check if activity exists in database
-        if not self.id:
+        if not self.id: # Activity must be saved to have an ID
             return None
             
         # Query to get count of each rating value (1-5 stars)
@@ -171,13 +171,13 @@ class Activity:
             return None
         
         # Initialize rating distribution with all possible ratings (1-5)
-        rating_distribution = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+        rating_distribution = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0} # Default distribution - all zero
         total_ratings = 0
         
         # Populate distribution with actual counts from database
-        for rating, count in rating_counts:
-            rating_distribution[rating] = count
-            total_ratings += count
+        for rating, count in rating_counts: # rating is 1-5, count is number of feedback entries
+            rating_distribution[rating] = count # Store count for this rating
+            total_ratings += count # Increment total ratings count
         
         # Return None if no ratings exist
         if total_ratings == 0:
@@ -188,7 +188,7 @@ class Activity:
                    FROM feedback 
                    WHERE activity_id = %s"""
         
-        success, avg_result = DbConnection.execute_query(query, (self.id,), fetch_one=True)
+        success, avg_result = DbConnection.execute_query(query, (self.id,), fetch_one=True) # Fetch average rating
         average_rating = float(avg_result[0]) if avg_result and avg_result[0] else 0
         
         # Calculate median rating (approximate method using SQL)
@@ -200,18 +200,18 @@ class Activity:
                    LIMIT 1 OFFSET %s"""
         
         median_offset = total_ratings // 2  # Middle position for median
-        success, median_result = DbConnection.execute_query(query, (self.id, median_offset), fetch_one=True)
-        median_rating = float(median_result[0]) if median_result else 0
+        success, median_result = DbConnection.execute_query(query, (self.id, median_offset), fetch_one=True) # Use OFFSET to get median
+        median_rating = float(median_result[0]) if median_result else 0 # Ensure median is a float
         
         # Return comprehensive rating statistics
         return {
-            'total_ratings': total_ratings,
-            'average_rating': average_rating,
-            'median_rating': median_rating,
-            'rating_distribution': rating_distribution
+            'total_ratings': total_ratings, # Total number of ratings received
+            'average_rating': average_rating, # Average rating value (float)
+            'median_rating': median_rating, # Median rating value (float)
+            'rating_distribution': rating_distribution # Distribution of ratings (1-5 stars)
         }
 
-    def get_comprehensive_details(self):
+    def get_comprehensive_details(self): 
         """
         Retrieve all information needed for the activity details GUI.
 
@@ -223,8 +223,8 @@ class Activity:
             return None
         
         # Get participation information
-        participant_list = self.get_participant_list()
-        current_participants = len(participant_list)
+        participant_list = self.get_participant_list() # List of tuples (student_id, name, surname)
+        current_participants = len(participant_list) # Count of current participants
         
         # Structure participation data
         participation_data = {
@@ -244,7 +244,7 @@ class Activity:
                    ORDER BY f.created_at DESC
                    LIMIT 50"""
         
-        success, recent_feedback = DbConnection.execute_query(query, (self.id,), fetch_all=True)
+        success, recent_feedback = DbConnection.execute_query(query, (self.id,), fetch_all=True) #  Fetch last 50 feedback entries
         if not success:
             recent_feedback = []
         
@@ -277,9 +277,9 @@ class Activity:
         activities = []
         for row in result:
             # Create Activity object with data from database
-            activity = Activity(row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8])
+            activity = Activity(row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8]) # row[0] is the ID
             activity.id = row[0]  # Set the database ID
-            activities.append(activity)
+            activities.append(activity) # Append to list
         
         return activities
 
@@ -337,12 +337,11 @@ class Activity:
         :return: bool - True if activity is at capacity, False if it can accept more participants.
         - If maxpart is None (unlimited), always returns False.
         """
-        # Activities with no maximum capacity are never full
-        if not self.maxpart:
+        current_participants = self.get_current_participants()
+        # Cambiamento: controllo esplicito su None
+        if self.maxpart is None:
             return False
-        
-        # Compare current participants to maximum capacity
-        return self.get_current_participants() >= self.maxpart
+        return current_participants >= self.maxpart
 
     def __str__(self):
         """

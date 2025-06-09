@@ -1,7 +1,7 @@
-import mysql.connector
-from mysql.connector import pooling
-import threading
-import logging
+import mysql.connector # Importing mysql.connector for MySQL database connection
+from mysql.connector import pooling # Importing pooling for connection pooling - a way to manage multiple connections efficiently
+import threading # Importing threading for thread-safe operations - necessary for multi-threaded applications 
+import logging # Importing logging for logging database operations - a way to track events that happen during execution
 
 class DbConnection:
     # Class-level variable for the MySQL connection pool (shared by all instances)
@@ -13,8 +13,8 @@ class DbConnection:
     _config = {
         'host': 'localhost',                # Database server host
         'user': 'root',                     # Database user
-        'password': '',                     # Database password
-        'database': 'project',              # Database name
+        'password': 'ccgZ86+d$L:i*Ez',                     # Database password
+        'database': 'trip_manager',              # Database name
         'charset': 'utf8mb4',               # Character set for Unicode support
         'collation': 'utf8mb4_unicode_ci',  # Collation for Unicode
         'autocommit': False,                # Disable autocommit for transactions
@@ -29,7 +29,7 @@ class DbConnection:
     }
 
     @classmethod
-    def initialize_pool(cls):
+    def initialize_pool(cls): # Initialize the MySQL connection pool.
         """
         Initialize the MySQL connection pool if it hasn't been created yet.
         Uses thread locking to ensure only one pool is created in multi-threaded environments.
@@ -72,7 +72,7 @@ class DbConnection:
                 logging.warning("Retrieved invalid connection from pool")
                 return None
                 
-        except mysql.connector.Error as e:
+        except mysql.connector.Error as e: # Handle MySQL connection errors
             logging.error(f"Failed to get connection from pool: {e}")
             print(f"Failed to connect to database: {e}")
             return None
@@ -81,8 +81,8 @@ class DbConnection:
             print(f"Unexpected database error: {e}")
             return None
 
-    @classmethod
-    def execute_query(cls, query, params=None, fetch_one=False, fetch_all=False):
+    @classmethod # Execute a SQL query with automatic connection and cursor management.
+    def execute_query(cls, query, params=None, fetch_one=False, fetch_all=False): 
         """
         Execute a SQL query with automatic connection and cursor management.
         Handles SELECT, INSERT, UPDATE, and DELETE queries.
@@ -139,7 +139,7 @@ class DbConnection:
             if connection:
                 connection.close()  # Returns connection to pool
 
-    @classmethod
+    @classmethod # Execute multiple SQL queries in a single transaction.
     def execute_transaction(cls, queries_with_params):
         """
         Execute multiple SQL queries in a single transaction.
@@ -189,7 +189,7 @@ class DbConnection:
             if connection:
                 connection.close()
 
-    @classmethod
+    @classmethod # Test database connectivity by executing a simple SELECT statement.
     def test_connection(cls):
         """
         Test database connectivity by executing a simple SELECT statement.
@@ -212,7 +212,7 @@ class DbConnection:
         except Exception as e:
             return False, f"Connection test failed: {e}"
 
-    @classmethod
+    @classmethod # Get information about the connected database server.
     def get_database_info(cls):
         """
         Get information about the connected database server.
@@ -239,7 +239,7 @@ class DbConnection:
         except Exception as e:
             return False, f"Error getting database info: {e}"
 
-    @classmethod
+    @classmethod # Create necessary tables if they don't exist.
     def create_tables_if_not_exist(cls):
         """Create necessary tables if they don't exist"""
         tables = {            'students': """
@@ -366,7 +366,7 @@ class DbConnection:
         
         return success_count == len(tables), errors
 
-    @classmethod
+    @classmethod # Close the connection pool and clean up resources.
     def disconnect(cls):
         """Close the connection pool"""
         if cls._connection_pool is not None:
@@ -380,7 +380,7 @@ class DbConnection:
                 logging.error(f"Failed to close the database connection pool: {e}")
                 print(f"Failed to close the database connection pool: {e}")
 
-    @classmethod
+    @classmethod # Update the database configuration dynamically.
     def update_config(cls, **kwargs):
         """Update database configuration"""
         cls._config.update(kwargs)

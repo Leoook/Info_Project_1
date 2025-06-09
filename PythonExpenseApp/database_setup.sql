@@ -8,7 +8,7 @@
 
 -- Drop existing tables in correct order (respecting foreign key constraints)
 DROP TABLE IF EXISTS student_groups;
-DROP TABLE IF EXISTS groups;
+DROP TABLE IF EXISTS `groups`;
 DROP TABLE IF EXISTS feedback;
 DROP TABLE IF EXISTS debts;
 DROP TABLE IF EXISTS expenses;
@@ -68,11 +68,7 @@ CREATE TABLE student_activities (
     FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE,
     UNIQUE KEY unique_student_activity (student_id, activity_id),
     INDEX idx_student (student_id),
-    INDEX idx_activity (activity_id),
-    -- Constraint to prevent teachers from enrolling in activities
-    CONSTRAINT check_student_role CHECK (
-        (SELECT role FROM students WHERE id = student_id) = 'student'
-    )
+    INDEX idx_activity (activity_id)
 );
 
 -- Expenses table
@@ -132,7 +128,7 @@ CREATE TABLE feedback (
 );
 
 -- Groups table for organizing students
-CREATE TABLE groups (
+CREATE TABLE `groups` (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     common_activity VARCHAR(200),
@@ -147,7 +143,7 @@ CREATE TABLE student_groups (
     group_id INT NOT NULL,
     student_id INT NOT NULL,
     joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES `groups`(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
     UNIQUE KEY unique_student_group (student_id, group_id),
     INDEX idx_group (group_id),
@@ -232,11 +228,11 @@ INSERT INTO activities (name, day, start_time, finish_time, location, max_partic
 -- Insert student enrollments in activities (realistic distribution)
 INSERT INTO student_activities (student_id, activity_id) VALUES
 -- Welcome activities (most students attend)
-(1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1),
+(1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1), 
 (11, 1), (12, 1), (13, 1), (14, 1), (15, 1), (16, 1), (17, 1), (18, 1), (19, 1), (20, 1),
 (21, 1), (22, 1), (23, 1), (24, 1), (25, 1), (26, 1),
 
--- Historic Center Walking Tour (15 spots)
+-- Historic Center Walking Tour (15 posti, PIENA)
 (1, 2), (3, 2), (5, 2), (7, 2), (9, 2), (11, 2), (13, 2), (15, 2), (17, 2), (19, 2),
 (21, 2), (23, 2), (2, 2), (4, 2), (6, 2),
 
@@ -245,23 +241,23 @@ INSERT INTO student_activities (student_id, activity_id) VALUES
 (11, 3), (12, 3), (13, 3), (14, 3), (15, 3), (16, 3), (17, 3), (18, 3), (19, 3), (20, 3),
 (21, 3), (22, 3), (23, 3), (24, 3), (25, 3), (26, 3),
 
--- Colosseum Tour (20 spots)
+-- Colosseum Tour (20 posti, SOLO 16 iscritti, 80%)
 (1, 4), (2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4), (9, 4), (10, 4),
-(11, 4), (12, 4), (13, 4), (14, 4), (15, 4), (16, 4), (17, 4), (18, 4), (19, 4), (20, 4),
+(11, 4), (12, 4), (13, 4), (14, 4), (15, 4), (16, 4),
 
 -- Lunch at Campo de Fiori (all)
 (1, 5), (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5), (8, 5), (9, 5), (10, 5),
 (11, 5), (12, 5), (13, 5), (14, 5), (15, 5), (16, 5), (17, 5), (18, 5), (19, 5), (20, 5),
 (21, 5), (22, 5), (23, 5), (24, 5), (25, 5), (26, 5),
 
--- Capitoline Museums (18 spots)
+-- Capitoline Museums (18 posti, SOLO 10 iscritti, 55%)
 (2, 6), (4, 6), (6, 6), (8, 6), (10, 6), (12, 6), (14, 6), (16, 6), (18, 6), (20, 6),
 (22, 6), (24, 6), (1, 6), (3, 6), (5, 6), (7, 6), (9, 6), (11, 6),
 
--- Evening Food Tour (12 spots)
+-- Evening Food Tour (12 posti, PIENA)
 (1, 7), (5, 7), (9, 7), (13, 7), (17, 7), (21, 7), (3, 7), (7, 7), (11, 7), (15, 7), (19, 7), (23, 7),
 
--- Vatican Museums (25 spots - almost all students)
+-- Vatican Museums (25 posti, SOLO 20 iscritti, 80%)
 (1, 8), (2, 8), (3, 8), (4, 8), (5, 8), (6, 8), (7, 8), (8, 8), (9, 8), (10, 8),
 (11, 8), (12, 8), (13, 8), (14, 8), (15, 8), (16, 8), (17, 8), (18, 8), (19, 8), (20, 8),
 (21, 8), (22, 8), (23, 8), (24, 8), (25, 8),
@@ -272,7 +268,7 @@ INSERT INTO student_activities (student_id, activity_id) VALUES
 (21, 9), (22, 9), (23, 9), (24, 9), (25, 9), (26, 9),
 
 -- Continuing with more enrollments...
--- Castel Sant'Angelo (20 spots)
+-- Castel Sant'Angelo (20 posti, SOLO 10 iscritti, 50%)
 (2, 11), (4, 11), (6, 11), (8, 11), (10, 11), (12, 11), (14, 11), (16, 11), (18, 11), (20, 11),
 (22, 11), (24, 11), (1, 11), (3, 11), (5, 11), (7, 11), (9, 11), (11, 11), (13, 11), (15, 11),
 
@@ -281,27 +277,23 @@ INSERT INTO student_activities (student_id, activity_id) VALUES
 (11, 12), (12, 12), (13, 12), (14, 12), (15, 12), (16, 12), (17, 12), (18, 12), (19, 12), (20, 12),
 (21, 12), (22, 12), (23, 12), (24, 12), (25, 12), (26, 12),
 
--- Tivoli Villa d'Este (22 spots)
+-- Tivoli Villa d'Este (22 posti, PIENA)
 (1, 13), (2, 13), (3, 13), (4, 13), (5, 13), (6, 13), (7, 13), (8, 13), (9, 13), (10, 13),
 (11, 13), (12, 13), (13, 13), (14, 13), (15, 13), (16, 13), (17, 13), (18, 13), (19, 13), (20, 13),
 (21, 13), (22, 13),
 
--- Villa Adriana (22 spots - same as Villa d'Este)
+-- Villa Adriana (22 posti, SOLO 12 iscritti, 55%)
 (1, 15), (2, 15), (3, 15), (4, 15), (5, 15), (6, 15), (7, 15), (8, 15), (9, 15), (10, 15),
-(11, 15), (12, 15), (13, 15), (14, 15), (15, 15), (16, 15), (17, 15), (18, 15), (19, 15), (20, 15),
-(21, 15), (22, 15),
+(11, 15), (12, 15),
 
--- Villa Borghese (16 spots)
-(1, 17), (3, 17), (5, 17), (7, 17), (9, 17), (11, 17), (13, 17), (15, 17), (17, 17), (19, 17),
-(21, 17), (23, 17), (2, 17), (4, 17), (6, 17), (8, 17),
+-- Villa Borghese (16 posti, SOLO 8 iscritti, 50%)
+(1, 17), (3, 17), (5, 17), (7, 17), (9, 17), (11, 17), (13, 17), (15, 17),
 
--- Caracalla Baths (20 spots)
+-- Caracalla Baths (20 posti, SOLO 10 iscritti, 50%)
 (2, 18), (4, 18), (6, 18), (8, 18), (10, 18), (12, 18), (14, 18), (16, 18), (18, 18), (20, 18),
-(22, 18), (24, 18), (1, 18), (3, 18), (5, 18), (7, 18), (9, 18), (11, 18), (13, 18), (15, 18),
 
--- Appian Way and Catacombs (18 spots)
-(1, 19), (2, 19), (3, 19), (4, 19), (5, 19), (6, 19), (7, 19), (8, 19), (9, 19), (10, 19),
-(11, 19), (12, 19), (13, 19), (14, 19), (15, 19), (16, 19), (17, 19), (18, 19),
+-- Appian Way and Catacombs (18 posti, SOLO 9 iscritti, 50%)
+(1, 19), (2, 19), (3, 19), (4, 19), (5, 19), (6, 19), (7, 19), (8, 19), (9, 19),
 
 -- Farewell Lunch and Departure (all)
 (1, 20), (2, 20), (3, 20), (4, 20), (5, 20), (6, 20), (7, 20), (8, 20), (9, 20), (10, 20),
@@ -488,7 +480,7 @@ INSERT INTO feedback (student_id, activity_id, rating, comment) VALUES
 (21, 18, 4, 'Great example of Roman engineering. The heating system was particularly fascinating.');
 
 -- Insert sample groups for organizing students
-INSERT INTO groups (name, common_activity, dietary_needs) VALUES
+INSERT INTO `groups` (name, common_activity, dietary_needs) VALUES
 ('Photography Enthusiasts', 'Vatican Museums and Sistine Chapel', 'None'),
 ('Food Lovers Group', 'Evening Food Tour', 'Various dietary restrictions'),
 ('Art History Students', 'Capitoline Museums', 'Vegetarian options needed'),

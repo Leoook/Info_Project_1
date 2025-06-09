@@ -415,4 +415,6 @@ class Expense:
             print(expense)  # Automatically calls __str__()
             logger.info(f"Processing {expense}")
         """
-        return f"Expense(id={self.id}, amount=${self.amount:.2f}, description='{self.description}', date={self.date})"
+        # Format date as YYYY-MM-DD for consistency
+        return f"Expense(id={self.id}, amount=${self.amount:.2f}, description='{self.description}', date={self.date})"  
+    

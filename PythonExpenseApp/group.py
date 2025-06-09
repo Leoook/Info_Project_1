@@ -94,9 +94,9 @@ class Group:
         # Table creation is handled by DbConnection.create_tables_if_not_exist() or a setup script.
         
         query = "INSERT INTO groups (name, common_activity, dietary_needs) VALUES (%s, %s, %s)"
-        params = (self.name, self.common_activity, self.dietary_needs)
+        params = (self.name, self.common_activity, self.dietary_needs) # Using self.name for group name
         
-        success, result = DbConnection.execute_query(query, params)
+        success, result = DbConnection.execute_query(query, params) 
         if success:
             self.id = result
             print(f"Group saved to database with ID {self.id}")
@@ -161,6 +161,7 @@ class Group:
             return result
         return []
 
-    def __str__(self):
-        return (f"Group [id={self.id}, name={self.name}, commonActivity={self.common_activity}, "
-                f"dietaryNeeds={self.dietary_needs}, membersCount={len(self.members)}]")
+    def __str__(self): # String representation of the Group object
+        return (f"Group [id={self.id}, name={self.name}, commonActivity={self.common_activity}, "  #added name attribute
+                f"dietaryNeeds={self.dietary_needs}, membersCount={len(self.members)}]")  # Added members count for better representation
+        # Note: This will not include members' details, just the count.
